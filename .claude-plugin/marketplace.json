@@ -1,0 +1,15 @@
+{
+  "name": "cpp",
+  "description": "C++ skill for coding agents: Core-Guidelines-grounded writing, review and modernization with standard detection and topic references.",
+  "owner": {
+    "name": "Marco Barbone"
+  },
+  "plugins": [
+    {
+      "name": "cpp",
+      "source": "./",
+      "description": "Write, review, refactor and modernize C++ against the C++ Core Guidelines: standard detection (C++11/14/17/20/23) plus 32 on-demand topic references.",
+      "category": "productivity"
+    }
+  ]
+}

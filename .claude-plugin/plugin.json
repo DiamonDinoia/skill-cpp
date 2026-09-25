@@ -1,0 +1,10 @@
+{
+  "name": "cpp",
+  "description": "Write, review, refactor and modernize C++ against the C++ Core Guidelines: standard detection (C++11/14/17/20/23) plus 32 on-demand topic references.",
+  "version": "1.0.0",
+  "author": { "name": "Marco Barbone", "url": "https://github.com/DiamonDinoia" },
+  "license": "MIT",
+  "homepage": "https://github.com/DiamonDinoia/skill-cpp",
+  "repository": "https://github.com/DiamonDinoia/skill-cpp",
+  "keywords": ["skills", "cpp", "c++", "core-guidelines", "code-review", "performance"]
+}

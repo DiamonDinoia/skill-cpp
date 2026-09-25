@@ -1,0 +1,18 @@
+{
+  "name": "cpp",
+  "description": "Write, review, refactor and modernize C++ against the C++ Core Guidelines: standard detection (C++11/14/17/20/23) plus 32 on-demand topic references.",
+  "version": "1.0.0",
+  "author": { "name": "Marco Barbone", "url": "https://github.com/DiamonDinoia" },
+  "homepage": "https://github.com/DiamonDinoia/skill-cpp",
+  "repository": "https://github.com/DiamonDinoia/skill-cpp",
+  "license": "MIT",
+  "keywords": ["skills", "cpp", "c++", "core-guidelines", "code-review", "performance"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "cpp",
+    "shortDescription": "C++ against the Core Guidelines, detected standard first",
+    "longDescription": "Detects the project's C++ standard (C++11/14/17/20/23) before writing or reviewing a line, loads one standard reference plus the topic references the task triggers, and holds every proposal to warning-clean, standard-conformant code.",
+    "category": "Developer Tools",
+    "capabilities": ["Instructions"]
+  }
+}
