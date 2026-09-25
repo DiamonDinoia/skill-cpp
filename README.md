@@ -67,15 +67,11 @@ and [cppreference](https://en.cppreference.com/).
 | Claude Code | `claude plugin marketplace add DiamonDinoia/skill-cpp && claude plugin install cpp@cpp --scope user` |
 | Codex CLI | `codex plugin marketplace add DiamonDinoia/skill-cpp`, then `codex plugin add cpp@cpp` |
 | Gemini CLI | `gemini extensions install https://github.com/DiamonDinoia/skill-cpp --consent` |
-| ~50 agents: opencode, Cursor, Copilot, Windsurf, Roo, Continue, ... | `npx skills add DiamonDinoia/skill-cpp --skill cpp -g -y -a '*'` |
-| any `gh skill` agent | `gh skill install DiamonDinoia/skill-cpp cpp --agent claude-code --scope user` (or `--agent universal`) |
 | by hand | `git clone https://github.com/DiamonDinoia/skill-cpp && ln -s "$PWD/skill-cpp/skills/cpp" ~/.claude/skills/cpp` |
 
-Every harness with a native format carries one in this repository: `.claude-plugin/` for Claude
-Code, `.codex-plugin/` (Codex prefers its own plugin manifest) and `gemini-extension.json`.
-Everything else uses the two installers above: both write `~/.agents/skills/cpp`, and
-`skills add -a '*'` also symlinks each agent's home (claude, cursor, copilot, windsurf,
-continue, and more).
+The three harnesses with a native manifest carry one in this repository: `.claude-plugin/` for
+Claude Code, `.codex-plugin/` for Codex, and `gemini-extension.json` for Gemini CLI. Any other
+harness: install by hand (last row).
 
 Claude Code: in `/plugin`, enable auto-update for the `cpp` marketplace. `claude plugin disable
 cpp@cpp` stops the skill. `claude plugin update cpp@cpp` pulls the new release. Claude Code loads
