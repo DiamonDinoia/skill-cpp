@@ -7,8 +7,10 @@ compile time or code size grows.
 
 - Write the generic version once, parameterized. A hand-written specialization per size, type
   or architecture is duplicated logic that drifts.
+- Inside a class template definition, the bare template name names the current instantiation; do not repeat the parameter list.
 - A template expresses an algorithm over a requirement, not a set of type-specific tricks.
 - Prefer a function template to a class template when there is no state.
+- A function template cannot be stored or addressed; only its instantiations exist.
 - Keep the interface small and the requirements explicit. A requirement that is hard to state
   means the abstraction is wrong.
 - Cleverness that hides the dataflow is complexity, not skill. A reader must see which code
@@ -26,6 +28,10 @@ compile time or code size grows.
 - Constrain the general template rather than adding a competing overload. A
   forwarding-reference overload wins every inexact match unless constrained.
 - Prefer a concept over a tag type, and a tag type over an integral flag.
+- In a requires-expression, brace a compound requirement's expression before `-> Type`; a nested predicate needs its own `requires`.
+- A requires-clause cannot hang on a non-template.
+- A concept checks syntax, not semantics: `std::totally_ordered` accepts a type that violates the ordering axioms.
+- Do not validate semantic requirements at construction through a concept.
 
 ## Compile-time branching
 
@@ -94,6 +100,9 @@ compile time or code size grows.
   guides for project types.
 - Deduction ignores implicit conversions, so a call that "should" work often needs an explicit
   template argument or a constrained overload.
+- A braced-init-list argument to a deduced parameter is a non-deduced context: deduction fails.
+- Declare the return of an expression `auto`, not `T`, when operators may yield another type (`string_view + string_view` yields `string`).
+- Pin the type assumption with `static_assert(std::is_same_v<...>)` when it matters.
 
 ## Specialization and customization
 
@@ -105,6 +114,7 @@ compile time or code size grows.
   design documents that as the extension mechanism.
 - Specializing a standard template is allowed for `std::hash` and a few others, for a
   user-defined type only.
+- Otherwise leave the standard alone: no specialization, forward declaration, address taking or detection idioms against standard entities.
 - Two-phase lookup binds a non-dependent name at definition, so a dependent call must be
   visible at definition or found by ADL at instantiation. Prefix dependent types with
   `typename`, dependent templates with `template`.
@@ -113,6 +123,9 @@ compile time or code size grows.
 
 - Put a `static_assert` with a readable message at the top of a template whose requirement
   the constraint cannot express.
+- A `static_assert` whose condition is not template-dependent fires at definition, even in a discarded `if constexpr` branch.
+- Make the condition dependent (a `dependent_false<T>` trait) when it must wait for instantiation.
+- Never put a `static_assert` in a function a requires-expression must evaluate.
 - Fail at the interface, not deep inside a helper. A concept on the entry point gives a
   one-line error, a failure three levels down gives a page.
 - When a template error is unreadable, reduce it: instantiate the failing type explicitly in

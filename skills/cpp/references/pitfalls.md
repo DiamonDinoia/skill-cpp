@@ -17,6 +17,7 @@ compiler, or only after an unrelated edit is undefined behaviour until proven ot
   reached through a function call or member access. `const auto& r = f().member` extends
   nothing when `f` returns by value.
 - Dereferencing a dangling or null pointer, a `this` that outlived its object included.
+- Relational comparison of pointers is defined only within one array or object.
 - Deleting through a base pointer whose destructor is not virtual.
 - Double free, or freeing memory from a different allocator.
 - Placement `new` over a live object, or reusing the old pointer afterwards outside the
@@ -43,9 +44,12 @@ compiler, or only after an unrelated edit is undefined behaviour until proven ot
   `char`, `unsigned char` and `std::byte` may alias anything, and that exemption is one-way.
 - A `union` write followed by a read of a different member is not portable in C++, unlike C.
 - The portable punning tools are `std::memcpy` and `std::bit_cast` (C++20).
+- Never `memcmp` whole objects: padding bytes compare. Use it only when `std::has_unique_object_representations` holds, else compare memberwise.
 - `reinterpret_cast` changes the type of the pointer, never the type of the object.
+- Prefer `memmove` when buffers may overlap; `memcpy`, `strcpy` and `strncpy` on overlapping buffers are undefined behaviour.
 - Loading through a misaligned pointer is undefined even on hardware that tolerates it. Use
   `alignas` for over-aligned types and the aligned allocation forms.
+- Never overlay a struct on raw wire bytes; `memcpy` the fields into a correctly aligned local instead.
 
 ## Arithmetic
 
@@ -55,6 +59,7 @@ compiler, or only after an unrelated edit is undefined behaviour until proven ot
 - Division and remainder by zero, and `INT_MIN / -1`, are undefined.
 - Integer promotion widens narrow types to `int` before arithmetic, so
   `uint16_t a, b; a * b` overflows as `int`.
+- Fully parenthesize every function-like macro parameter and the whole macro body, or the expanded text reparses at the caller's precedence.
 - Mixed signed and unsigned comparison converts the signed operand to unsigned. Enable the
   sign-compare warning as an error.
 - Narrowing a value that does not fit is implementation-defined for integers, undefined for

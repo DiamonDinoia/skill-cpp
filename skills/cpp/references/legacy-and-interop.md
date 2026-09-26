@@ -46,14 +46,21 @@ pass.
 
 - Wrap the handle in an RAII type at the boundary, so no raw handle circulates beyond it.
   `std::unique_ptr` with a custom deleter covers the single-call release case.
+- An opaque non-pointer handle wants a small RAII type of its own, not a `unique_ptr` forced to hold it as a pointer.
+- Wrap a loaded-library handle in RAII, and never call into a library after it is unloaded.
+- When teardown ordering is unclear, leak the library rather than unload it.
 - Check every return code at the boundary and translate it once into the project's error
   strategy.
 - Never let an exception propagate into a C callback or across a C ABI. Catch everything at the
   boundary function and translate to an error code.
 - A C callback taking a `void*` context receives a pointer to a C++ object. The trampoline casts
   it back, and the object must outlive the registration.
+- POSIX thread cancellation unwinds through C++ frames unpredictably; keep `pthread_cancel` away from C++ code.
 - `std::out_ptr` and `std::inout_ptr` (C++23) adapt a smart pointer to a `T**` output parameter.
   Before that, use a local raw pointer and adopt it immediately.
+- Embedding a C API with global state (CPython): include its header (`Python.h`) before any other.
+- For such an API, acquire its global lock around its calls and release the lock around long C++-only work.
+- Never hand Python an unmanaged pointer or reference to internal C++ state.
 - Convert a C array or a pointer-plus-length pair to `std::span` at the C++ side of the boundary,
   immediately.
 - Match the C header's types exactly, including signedness and width. Never assume `int` and
@@ -71,6 +78,8 @@ pass.
 
 - A header shared with C uses `#ifdef __cplusplus` and `extern "C"`, and contains only what C
   can parse.
+- Before sharing a type across the C boundary, `static_assert` `is_trivially_copyable` and `is_standard_layout` on it.
+- C++ reuses tail padding, so the byte-copyable shape is not the natural one.
 - C and C++ differ on `const`, on `union` type punning, and on implicit conversions from
   `void*`. Code that compiles as both is subject to the stricter reading.
 - Link with the C++ driver when any translation unit is C++, so the runtime and the static

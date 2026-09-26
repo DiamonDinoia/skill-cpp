@@ -24,11 +24,16 @@ Three mechanisms, in increasing cost of implementation:
 - Composition is the point. One pass over the data replaces one pass per stage.
 - A view does not own. Never build a pipeline over a temporary container, and never store a view
   whose source can be destroyed or reallocated.
+- Generic code over ranges must expect a proxy `reference`: never take an element's address, never assume a real lvalue.
+- Viewing an Eigen buffer with `std::mdspan`: the default `layout_right` silently transposes it; Eigen is column-major, use `layout_left`.
+- Never pass a temporary view pipeline to a parallel range algorithm: `transform_view` is not a `borrowed_range`, and the iterators dangle.
 - `filter_view::begin` is not constant time and caches its first result, so a filtered view
   passed around is not free to re-traverse.
 - Views cost compile time and are much slower than a plain loop in an unoptimized build. Check
   both when the code is hot and the debug build matters.
 - Materialize deliberately with `ranges::to` (C++23) or an explicit loop, once, at the end.
+- Writing a view: `begin()`/`end()` plus `ranges::view_interface`; specialize `std::iter_swap` for a proxy iterator so mutating algorithms work.
+- At an adaptor boundary, apply `std::views::all` to convert any incoming range into a view.
 
 ## Proxy objects
 

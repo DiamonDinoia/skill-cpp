@@ -7,10 +7,13 @@ initialization.
 
 - Initialize every object at its declaration. Reading an uninitialized automatic object of
   built-in type is undefined behaviour.
+- Do not invent an artificial initial value for data that will be overwritten: the dead write hides uninitialized use from the tools.
+- Initialize with a program-meaningful value, or leave vocabulary containers empty.
 - Prefer `{}`: it rejects narrowing and cannot be parsed as a function declaration. Two
   exceptions: a container size (`std::vector<int> v(100)`), and a type whose
   `std::initializer_list` constructor would hijack the call.
 - `T x{};` value-initializes. `T x;` at block scope leaves a built-in member indeterminate.
+- Initialize with the final value directly; a branchy initializer is an immediately-invoked lambda.
 - Prefer a default member initializer to repeating the value in every constructor.
 - Initialize members in the member initializer list. Members initialize in declaration order,
   not in the order written. Enable the warning for the mismatch.
@@ -18,6 +21,7 @@ initialization.
   declaration invites an uninitialized read and a stale value.
 - Prefer a function-local `static` to a namespace-scope object with a non-trivial constructor.
   It initializes on first use and avoids the static initialization order fiasco.
+- A Singleton instead hides dependencies and blocks injection; instantiation control is its only real job, never global access.
 
 ## `auto`
 
@@ -73,6 +77,8 @@ initialization.
 - Use `nullptr`, never `0` or `NULL`.
 - A raw pointer is a non-owning observer, may be null, and points to one object. Use a
   container, a reference or a span for the other cases.
+- Declare a may-not-be-null pointer as a not-null type: the type system enforces it where an assertion only samples it.
+- A not-null check that returns a reference to the verified pointee makes later dereferences race-free against a pointer changed in between.
 
 ## Casts and conversions
 
@@ -80,6 +86,7 @@ initialization.
   `reinterpret_cast`.
 - `static_cast` for value conversions and for navigating a hierarchy when the type is known,
   `dynamic_cast` when it is not and the check is needed.
+- `-Wall` stays silent on string-literal-to-`bool` conversions on gcc and msvc; the implicit conversion compiles under the default warning set.
 - `const_cast` only to call a legacy API that is const-correct in behaviour but not in
   signature. Modifying an object declared `const` is undefined behaviour.
 - `reinterpret_cast` only at a documented punning or ABI boundary, under the aliasing rules in

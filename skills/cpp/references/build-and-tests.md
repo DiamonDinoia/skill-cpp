@@ -52,6 +52,7 @@ change needs.
   hand-rolled harness.
 - Write the smallest test that fails when the logic breaks. A test that passes on wrong code
   is worse than none, because it removes the pressure to check.
+- Never `#define private public` to pry class internals open for a unit test; the macro also blinds static analysis.
 - Use a real oracle: an analytical result, a reference implementation, an invariant, a round
   trip. Comparing an implementation to itself proves nothing.
 - Numerical code compares against a tolerance derived from the error bound, not a guess, and
@@ -62,8 +63,11 @@ change needs.
 - Verify the assertions actually ran. A test that reports nothing on success is not evidence.
 - Keep tests deterministic: fixed seeds, no wall-clock dependence, no reliance on unordered
   container order.
+- Keep unit tests hermetic: no database, network, file system or environment dependence. A test that needs them is not a unit test.
 - Keep the suite fast enough to run on every change. Move exhaustive sweeps to a scheduled
   job.
+- Test that un-compilable code fails to compile: an expect-fail snippet built with the project's own flags.
+- One test of `constexpr` code runs at compile time inside a `static_assert` and at run time as a normal call.
 - Measure coverage (`gcov` with `lcov` or `gcovr`, or the platform equivalent) to find the
   untested branch. Read the next section before treating a number as a result.
 
@@ -101,6 +105,7 @@ Each passes while the property it appears to test is broken.
 
 - Set the standard as a target property. Warnings, sanitizers and optimization stay
   consistent across the whole binary: mixed settings break the one-definition rule.
+- Reproducible builds: override `__DATE__`/`__TIME__` (`SOURCE_DATE_EPOCH`, `/Brepro`) and stamp out path-dependent `__FILE__` values.
 - Build and test in at least two configurations, debug with assertions and sanitizers, and
   optimized. A defect only at `-O2` is usually undefined behaviour.
 - Read build success from the build's own exit code, never from a piped command's.
@@ -116,6 +121,7 @@ Each passes while the property it appears to test is broken.
 - A matrix over the supported compilers and standards, plus one sanitizer job.
 - Fail on a new warning, a new analyzer finding, or a formatting difference.
 - Keep the pipeline fast. A slow pipeline gets bypassed.
+- Share configure, build and test options through CMake Presets so everyone invokes the build identically.
 
 ## What evidence a change needs
 
