@@ -17,14 +17,17 @@ base rules, which still apply.
 | templated lambdas `[]<class T>(T x)` | `auto` parameters plus `decltype` gymnastics |
 | `constexpr` virtual, `constexpr` allocation, `constexpr` algorithms | runtime tables, macro tables |
 | `consteval`, `constinit` | `constexpr` plus a hope about when it runs |
+| `[[nodiscard]]` with a reason string | a comment explaining why the result matters |
 | `<bit>`: `bit_cast`, `popcount`, `countl_zero`, `has_single_bit`, `bit_width` | `memcpy` punning, compiler builtins behind macros |
 | `<numbers>` math constants | `M_PI` and other non-portable macros |
 | `std::jthread`, `std::stop_token` | `std::thread` plus a manual join and a stop flag |
 | `std::atomic_ref`, atomic wait/notify, `std::latch`, `std::barrier`, `std::counting_semaphore` | condition-variable boilerplate |
 | `std::source_location` | `__FILE__` / `__LINE__` macros |
 | `using enum` | repeated enum qualification |
+| two's complement signed integers mandated | sign-magnitude and ones'-complement portability folklore |
 | `[[likely]]`, `[[unlikely]]` | compiler-specific `__builtin_expect` |
 | `std::to_array`, `std::ssize`, `std::midpoint`, `std::lerp` | hand-written helpers, overflow-prone `(a+b)/2` |
+| `std::cmp_less`, `cmp_greater` and friends | mixed-sign integer comparison through a common type |
 | `starts_with`, `ends_with` on strings; `contains` on the associative containers | `substr` and `find` comparisons, `find(k) != end()` |
 | `std::erase`, `std::erase_if` | the erase-remove idiom |
 | range-`for` with initializer | a temporary leaking into the enclosing scope |
@@ -33,6 +36,7 @@ base rules, which still apply.
 | `std::assume_aligned` | compiler-specific alignment hints |
 | `std::bind_front` | `std::bind` |
 | `std::make_shared` for arrays, `std::make_unique_for_overwrite` | `shared_ptr<T[]>(new T[n])`, value-initializing a buffer about to be overwritten |
+| `std::atomic<std::shared_ptr<T>>` | the free `atomic_load`/`atomic_store` on shared pointers |
 | `[[no_unique_address]]` | empty base optimization by inheritance |
 | parenthesized aggregate initialization, `std::identity`, `char8_t` | `emplace` failing on aggregates, identity lambdas |
 | modules, coroutines | headers, callback state machines, with the caveats below |
