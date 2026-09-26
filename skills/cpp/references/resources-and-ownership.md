@@ -20,7 +20,12 @@ and ownership.
   A custom deleter carries a C API's `free`/`close`/`destroy` function.
 - `std::shared_ptr` only when ownership is genuinely shared and the last owner is unknown. It
   costs an allocation, two atomic counters, and it hides the lifetime from the reader.
+- The control block also costs code: libstdc++ instantiates a dispose/destroy vtable per
+  pointee type, so many distinct `shared_ptr<T>` uses are measurable bloat.
 - `std::weak_ptr` breaks cycles and expresses "may be gone". A cycle of `shared_ptr` leaks.
+- In an asynchronous chain, keep the object alive by capturing a `shared_ptr` in every
+  handler; a self-vending class hands out `shared_from_this()`. Pass the `shared_ptr` by
+  value only when the callee takes over lifetime.
 - Prefer a value member to any pointer. A container of values beats a container of pointers
   unless polymorphism or stable addresses are required.
 - No `new` and no `delete` in application code. Use `std::make_unique`, `std::make_shared`, or
@@ -66,6 +71,8 @@ and ownership.
   on destruction.
 - `reserve` before a known number of `push_back` calls. `shrink_to_fit` only when the peak is
   much larger than the steady state.
+- A fixed-capacity stack container avoids the heap entirely for a small, bounded number of
+  small objects.
 - `emplace_back` to construct in place, `push_back` when a constructed object already exists,
   because `emplace` bypasses `explicit` checks.
 - A container of `unique_ptr` is the standard way to own a polymorphic set.
@@ -84,6 +91,8 @@ and ownership.
 
 - Wrap the C handle in a `unique_ptr` with a stateless deleter, or in a purpose-built RAII
   class when release takes more than one call.
+- Guard a custom deleter against an incomplete pointee with `static_assert(sizeof(T) > 0)`
+  inside it.
 - Convert at the boundary. Take ownership on the way in, release it explicitly on the way out,
   and never let a raw handle circulate in the rest of the code.
 - `std::out_ptr` and `std::inout_ptr` (C++23) adapt a smart pointer to a C function that writes

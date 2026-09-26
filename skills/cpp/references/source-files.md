@@ -11,6 +11,8 @@ boundary, or fixing include and link problems.
 - Include only what you use. Every extra include costs compile time for every consumer and
   triggers a rebuild on every change.
 - Forward declare a type when only a pointer or a reference to it appears in the header.
+  Include the header that defines an enum rather than forward-declaring it; a diverging
+  underlying type changes the struct's `sizeof`.
 - Order includes so each header proves it is self-contained: own header, project, third party,
   standard.
 - Use `#pragma once`, or include guards named after the project and the path. Never a name
@@ -25,6 +27,8 @@ boundary, or fixing include and link problems.
 - Put everything in a project namespace. Nothing at global scope except `main`.
 - Use a nested `detail` namespace for entities that are public only because the language
   requires it, and do not document them as interface.
+- Bake a session identifier into OS-visible IPC names, and group entities in session-scoped
+  namespaces so unrelated sessions cannot collide.
 - Never open namespace `std`, except to specialize a template the standard permits for a
   user-defined type.
 - Put every entity local to a `.cpp` file in an anonymous namespace: helpers, constants,
@@ -50,6 +54,9 @@ boundary, or fixing include and link problems.
 
 - The physical dependency graph decides the rebuild cost. Break it with forward declarations,
   interface classes and the pimpl idiom.
+- No cyclic dependencies between components: escalate the shared need upward, demote the
+  commonality downward. Small redundancy beats coupling. Refuse cyclic target dependencies at
+  configure time (CMake `GLOBAL_DEPENDS_NO_CYCLES`).
 - Pimpl removes the private members from the header at the cost of one indirection and one
   allocation. Declare the destructor in the header, define it in the source file.
 - Precompiled headers and a compilation cache reduce the cost of what remains. Neither fixes a
@@ -57,18 +64,31 @@ boundary, or fixing include and link problems.
 - Measure before and after: total build time, and the rebuild cost of touching the most central
   header.
 - Modules (C++20) fix this properly once the compiler, build system and IDE all support them.
+- Migrating a library to a named module: wrap the headers into a module interface, evict
+  interface macros (they cannot be exported), put third-party includes in the global module
+  fragment, and never `#include` a header after an import that brought the same declarations.
+  A scanning build system orders module compilation; without one, compile a module before its
+  importers. Modules fix parse cost, not dependency management or ABI; the diamond problems
+  remain.
 - The full set of build-speed levers is in `compile-speed.md`.
 
 ## Library boundaries and ABI
 
 - A shared library's ABI is a contract. Class layout, virtual table layout, inline function
   bodies, exception types and the standard library version all leak across it.
+- Put every ABI-affecting build setting in the CMake toolchain file, not scattered through
+  project files.
 - Anything inline is baked into the caller, so changing it takes effect only after the caller
   is rebuilt.
 - Export as little as possible and hide the rest with visibility settings. A smaller export
   table links faster and loads faster.
 - Never expose standard library types across a boundary that must stay ABI-stable between
   compiler versions.
+- Link shared libraries with `-z defs` (`--no-undefined`) so an unresolved symbol fails at
+  link time, not at load. Code in a shared library is not inlined across the boundary; the
+  hot interface belongs in headers or static libraries.
+- No macro-conditional polyfills in a public header: fix type choices at library build time
+  so every consumer shares the one ABI.
 - Never let an exception cross a C ABI boundary. Catch and translate there.
 - Version the ABI explicitly when it must stay stable, and record what a change breaks.
 
@@ -99,3 +119,5 @@ boundary, or fixing include and link problems.
 - A generated file is a build artifact. Generate it into the build tree, never the source tree.
 - Every dependency costs build time, adds attackable code and constrains versions. Check
   whether the standard library or an existing dependency already covers the need.
+- Describe header sets and module sources with `target_sources(... FILE_SET ...)` instead of
+  manual install lists.

@@ -35,8 +35,13 @@ public API.
 - Return a `T*` only to indicate a position or an optional non-owning result, and document
   that null is possible.
 - Prefer a value or a `std::optional` to an out-parameter plus a `bool`.
+- Trivial types return in registers. A non-trivial type such as `std::unique_ptr` forces the
+  ABI to pass a hidden output pointer, and the call site gains destruction bookkeeping - one
+  more reason to keep special members defaulted.
 - A getter returning a reference exposes the invariant. Return by value for a cheap type, by
   `const&` for an expensive one, and consider not exposing the member at all.
+- Never return `const T&` to a parameter: a temporary argument binds to it and the result
+  dangles at the end of the full expression.
 
 ## `noexcept`, `explicit`, `const`
 
@@ -54,6 +59,8 @@ public API.
 
 - An overload set does one thing at different types. Overloads that behave differently need
   different names.
+- Delete the `const T&&` overload: the set then rejects temporaries at the call site. Nothing
+  in a move or forward path takes `const T&&`.
 - Prefer overloading to a runtime `switch` on a type tag, and a template to a long overload
   set of identical bodies.
 - ADL finds functions in the namespace of the argument types. That is what makes `swap(a, b)`
@@ -65,8 +72,15 @@ public API.
   `using Base::f;`.
 - A template argument makes implicit conversion unavailable in deduction, so a template plus
   non-template overload pair rarely does what the author expects.
+- Never mix default arguments with a same-named overload, and never mix a function template
+  with ordinary overloads of the same name: the wrong candidate wins without a diagnostic.
+- Top-level `const` on a by-value parameter is not part of the signature; it cannot form an
+  overload.
 - Never add a forwarding-reference overload to a set that also takes a concrete type. The
   forwarding one wins every non-exact match. Constrain it.
+- Prefer a `= delete` overload to a constraint that merely removes a candidate when the call
+  would dangle: deletion still participates in the set and surfaces the offending call
+  instead of silently reselecting another overload.
 
 ## Value categories
 
@@ -78,6 +92,8 @@ public API.
   value: it blocks copy elision on the local, and the parameter moves implicitly anyway. Move
   explicitly only when returning a member or other subobject, which no implicit move covers.
 - `std::move` on a `const` object copies silently.
+- A forwarding wrapper must return a true rvalue for an rvalue and the same reference for
+  an lvalue. Anything else binds a dangling reference.
 - A moved-from object is valid but unspecified. Do not read it. Assign or destroy it.
 
 ## Operators
@@ -91,7 +107,9 @@ public API.
   domain ordering.
 - Define binary arithmetic and stream operators as non-members so the left operand converts
   symmetrically. Define compound assignment as a member.
-- `operator<<` and `operator>>` take the stream by reference and return it.
+- `operator<<` and `operator>>` take the stream by reference and return it. A manipulator such
+  as `std::setw` applies to one insertion only, so a multi-field `operator<<` cannot honour
+  the caller's width.
 - Never overload `&&`, `||` or `,`. Overloading removes short-circuiting and sequencing.
 - An `operator[]` or `operator*` that can fail needs a documented precondition, checked in a
   debug build.
@@ -103,7 +121,13 @@ public API.
 - Capture explicitly. `[=]` and `[&]` hide what the closure holds, and `[=]` in a member
   function captures `this`, not the members. Since C++17, capture `*this` by value when the
   copy is intended.
+- A captureless lambda converts to a function pointer; any capture prevents it. `[=]` never
+  captures globals, and writing a global in a simple-capture is ill-formed.
+- Per-copy mutable state in a lambda wants init-capture plus `mutable`; a `static` local
+  inside the lambda is shared state.
 - A lambda stored beyond the enclosing scope must not capture by reference.
+- Pass an overloaded or templated callable to an algorithm through a generic lambda that
+  forwards: overload resolution then happens inside the body, not at the call site.
 - Use a template parameter for a callable inside hot code. `std::function` allocates and
   prevents inlining, so it belongs at an interface boundary. `std::move_only_function`
   (C++23) handles the move-only case.

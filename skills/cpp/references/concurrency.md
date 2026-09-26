@@ -23,6 +23,8 @@ between threads.
 - `volatile` is not atomic and gives no ordering. It is for memory-mapped hardware.
 - `const` is not thread-safe. It means "does not modify the observable state", and a `const`
   member with a cache needs a mutex.
+- `mutable` marks members that synchronization owns, such as the mutex itself; any other
+  mutable member shared between threads is a smell.
 - A "benign" race does not exist in the standard's model.
 
 ## Locks
@@ -33,6 +35,11 @@ between threads.
 - Take multiple locks with one `std::scoped_lock`, or in one documented global order.
   Inconsistent order is the classic deadlock.
 - Keep the critical section short, and free of blocking calls, user code and callbacks.
+- Group shared data with its mutex in one struct; the partitioning of what the lock protects
+  stays visible to the reader.
+- A spinlock is for a short, rarely contended section or a microsecond handoff on a dedicated
+  core; elsewhere a sleeping mutex wins, and an idle worker sleeps on a condition variable
+  instead of busy-waiting.
 - Never wait on a condition variable without a predicate. Spurious wakeups are permitted.
 - `std::recursive_mutex` usually means the public and private layers are not separated. Split
   them.
@@ -43,6 +50,9 @@ between threads.
 
 - Default to `std::atomic<T>` with sequential consistency. It is correct, and readers can
   reason about it.
+- A `std::atomic<T>` on a large type compiles but locks. Gate a hot-path atomic with
+  `static_assert(std::atomic<T>::is_always_lock_free)`. Two atomics are not one: a check over
+  separately loaded atomics races. Never `memory_order_consume`.
 - Use acquire/release only with a written argument for why it suffices, and pair every release
   with the acquire that reads it.
 - Relaxed ordering is for counters nobody uses to guard data: statistics, reference-count
@@ -51,6 +61,14 @@ between threads.
   atomic access to an object that is not always shared.
 - Lock-free is not automatically faster. A contended atomic serializes cache lines just as a
   lock does. Measure.
+- When lock-free is the measured choice: design the data structure, not the algorithm; every
+  reachable state must be valid, publish with CAS retry, reclaim safely. Never bolt a lock
+  onto a lock-free structure - it downgrades the progress guarantee. Review and years of use
+  do not vindicate lock-free code against the memory model.
+- Read-mostly shared data fits RCU or a COW-plus-RCU / Left-Right pattern: wait-free reads,
+  blocking writes, about twice the memory. Never block in a read-side critical section, never
+  span a coroutine suspension point in one, wait a grace period after unlinking before
+  freeing, and express the read-side with a scoped lock in a local scope.
 - False sharing between unrelated atomics on one cache line destroys scaling. Separate them by
   the destructive interference size.
 
@@ -67,6 +85,8 @@ between threads.
   of hand-rolled condition variable protocols.
 - Never create a thread per work item. Size the pool from the hardware and the workload, and
   respect any external limit on the machine.
+- Partition work by urgency: nothing slow on responsive threads, a dedicated thread for
+  long-running tasks, a pool for everything else.
 
 ## Parallel algorithms
 
@@ -76,6 +96,8 @@ between threads.
   need a linked backend.
 - `par` requires race-free element operations. `par_unseq` also forbids synchronization in the
   body, locks and allocation included, because calls may interleave within a thread.
+- Element access functions must not throw: an escaping exception terminates. Temporary
+  storage may throw `bad_alloc`, so leave budget for it.
 - `std::reduce` and `std::transform_reduce` parallelize where `std::accumulate` cannot. They
   require an associative, commutative operation, which reorders floating-point summation and
   changes the last digits.
@@ -94,6 +116,9 @@ between threads.
   coroutines for I/O-bound and latency-bound work, not inside a hot numeric loop.
 - A coroutine capturing a reference to a caller's temporary dangles. The frame outlives the
   expression that created it.
+- Never make a blocking call in a coroutine on a cooperative scheduler: it starves every
+  other task. Hold no lock and no thread-affine state across a suspension point; the
+  resumption may be on a different thread.
 - Generators and lazy sequences are in `lazy-evaluation-and-proxies.md`.
 
 ## Parallel loops and scaling
