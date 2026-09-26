@@ -44,7 +44,8 @@ compiler, or only after an unrelated edit is undefined behaviour until proven ot
   `char`, `unsigned char` and `std::byte` may alias anything, and that exemption is one-way.
 - A `union` write followed by a read of a different member is not portable in C++, unlike C.
 - The portable punning tools are `std::memcpy` and `std::bit_cast` (C++20).
-- Never `memcmp` whole objects: padding bytes compare. Use it only when `std::has_unique_object_representations` holds, else compare memberwise.
+- Never `memcmp` whole objects: padding bytes compare. Use it only when
+  `std::has_unique_object_representations` (C++17) holds, else compare memberwise.
 - `reinterpret_cast` changes the type of the pointer, never the type of the object.
 - Prefer `memmove` when buffers may overlap; `memcpy`, `strcpy` and `strncpy` on overlapping buffers are undefined behaviour.
 - Loading through a misaligned pointer is undefined even on hardware that tolerates it. Use

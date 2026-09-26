@@ -47,7 +47,7 @@ Load when a rule is being applied mechanically, when a review comment cites a ma
 - "Virtual calls are the bottleneck." An indirect call costs a few cycles, a cache miss costs
   hundreds. Measure before devirtualizing.
 - "Concepts and constraints bloat the binary." Constraint evaluation happens at compile time;
-  the generated code is the unconstrained one.
+  the generated code is the unconstrained one. (C++20)
 - "Unsigned for anything non-negative." Unsigned arithmetic wraps, breaks reverse loops, and mixes
   badly with signed values in comparisons. Use signed for arithmetic, unsigned where the
   standard's interface already is.

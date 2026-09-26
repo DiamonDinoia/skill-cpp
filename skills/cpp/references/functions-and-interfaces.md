@@ -60,7 +60,7 @@ public API.
 - An overload set does one thing at different types. Overloads that behave differently need
   different names.
 - Delete the `const T&&` overload: the set then rejects temporaries at the call site. Nothing
-  in a move or forward path takes `const T&&`.
+  in a move or forward path takes `const T&&`. (C++11)
 - Prefer overloading to a runtime `switch` on a type tag, and a template to a long overload
   set of identical bodies.
 - ADL finds functions in the namespace of the argument types. That is what makes `swap(a, b)`
@@ -78,7 +78,7 @@ public API.
   overload.
 - Never add a forwarding-reference overload to a set that also takes a concrete type. The
   forwarding one wins every non-exact match. Constrain it.
-- Prefer a `= delete` overload to a constraint that merely removes a candidate when the call
+- Prefer a `= delete` (C++11) overload to a constraint that merely removes a candidate when the call
   would dangle: deletion still participates in the set and surfaces the offending call
   instead of silently reselecting another overload.
 
@@ -93,7 +93,7 @@ public API.
   explicitly only when returning a member or other subobject, which no implicit move covers.
 - `std::move` on a `const` object copies silently.
 - A forwarding wrapper must return a true rvalue for an rvalue and the same reference for
-  an lvalue. Anything else binds a dangling reference.
+  an lvalue. Anything else binds a dangling reference. (C++11)
 - A moved-from object is valid but unspecified. Do not read it. Assign or destroy it.
 
 ## Operators
@@ -122,11 +122,11 @@ public API.
   function captures `this`, not the members. Since C++17, capture `*this` by value when the
   copy is intended.
 - A captureless lambda converts to a function pointer; any capture prevents it. `[=]` never
-  captures globals, and writing a global in a simple-capture is ill-formed.
-- Per-copy mutable state in a lambda wants init-capture plus `mutable`; a `static` local
+  captures globals, and writing a global in a simple-capture is ill-formed. (C++11)
+- Per-copy mutable state in a lambda wants init-capture (C++14) plus `mutable`; a `static` local
   inside the lambda is shared state.
 - A lambda stored beyond the enclosing scope must not capture by reference.
-- Pass an overloaded or templated callable to an algorithm through a generic lambda that
+- Pass an overloaded or templated callable to an algorithm through a generic lambda (C++14) that
   forwards: overload resolution then happens inside the body, not at the call site.
 - Use a template parameter for a callable inside hot code. `std::function` allocates and
   prevents inlining, so it belongs at an interface boundary. `std::move_only_function`

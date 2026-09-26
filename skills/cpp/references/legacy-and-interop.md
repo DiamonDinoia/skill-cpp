@@ -46,7 +46,7 @@ pass.
 
 - Wrap the handle in an RAII type at the boundary, so no raw handle circulates beyond it.
   `std::unique_ptr` with a custom deleter covers the single-call release case.
-- An opaque non-pointer handle wants a small RAII type of its own, not a `unique_ptr` forced to hold it as a pointer.
+- An opaque non-pointer handle wants a small RAII type of its own, not a `unique_ptr` (C++11) forced to hold it as a pointer.
 - Wrap a loaded-library handle in RAII, and never call into a library after it is unloaded.
 - When teardown ordering is unclear, leak the library rather than unload it.
 - Check every return code at the boundary and translate it once into the project's error
@@ -78,7 +78,7 @@ pass.
 
 - A header shared with C uses `#ifdef __cplusplus` and `extern "C"`, and contains only what C
   can parse.
-- Before sharing a type across the C boundary, `static_assert` `is_trivially_copyable` and `is_standard_layout` on it.
+- Before sharing a type across the C boundary, `static_assert` `is_trivially_copyable` and `is_standard_layout` on it. (C++11)
 - C++ reuses tail padding, so the byte-copyable shape is not the natural one.
 - C and C++ differ on `const`, on `union` type punning, and on implicit conversions from
   `void*`. Code that compiles as both is subject to the stricter reading.

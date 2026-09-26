@@ -59,7 +59,7 @@ the cause faster than another round of static reasoning.
 | an unexpected `memset` before a loop that overwrites everything | value-initialization waste, but only a finding if the `memset` is really emitted |
 | the same body duplicated many times | a dispatch tree pasted into every call site by an always-inline wrapper |
 | a call that survives at the highest optimization level | the definition was not visible, or the compiler judged it unprofitable |
-| a virtual call that disappears | devirtualization: `final` where the design allows, or the static type already fixes the target |
+| a virtual call that disappears | devirtualization: `final` where the design allows, or the static type already fixes the target (C++11) |
 | identical object size after a source change | link-time folding of duplicate instantiations. Measure the final binary, not the object files |
 
 ## Turning a codegen finding into a change

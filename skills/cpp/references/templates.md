@@ -28,9 +28,9 @@ compile time or code size grows.
 - Constrain the general template rather than adding a competing overload. A
   forwarding-reference overload wins every inexact match unless constrained.
 - Prefer a concept over a tag type, and a tag type over an integral flag.
-- In a requires-expression, brace a compound requirement's expression before `-> Type`; a nested predicate needs its own `requires`.
+- In a requires-expression, brace a compound requirement's expression before `-> Type`; a nested predicate needs its own `requires`. (C++20)
 - A requires-clause cannot hang on a non-template.
-- A concept checks syntax, not semantics: `std::totally_ordered` accepts a type that violates the ordering axioms.
+- A concept checks syntax, not semantics: `std::totally_ordered` accepts a type that violates the ordering axioms. (C++20)
 - Do not validate semantic requirements at construction through a concept.
 
 ## Compile-time branching
@@ -100,7 +100,7 @@ compile time or code size grows.
   guides for project types.
 - Deduction ignores implicit conversions, so a call that "should" work often needs an explicit
   template argument or a constrained overload.
-- A braced-init-list argument to a deduced parameter is a non-deduced context: deduction fails.
+- A braced-init-list argument to a deduced parameter is a non-deduced context: deduction fails. (C++11)
 - Declare the return of an expression `auto`, not `T`, when operators may yield another type (`string_view + string_view` yields `string`).
 - Pin the type assumption with `static_assert(std::is_same_v<...>)` when it matters.
 
@@ -123,7 +123,7 @@ compile time or code size grows.
 
 - Put a `static_assert` with a readable message at the top of a template whose requirement
   the constraint cannot express.
-- A `static_assert` whose condition is not template-dependent fires at definition, even in a discarded `if constexpr` branch.
+- A `static_assert` whose condition is not template-dependent fires at definition, even in a discarded `if constexpr` branch. (C++17)
 - Make the condition dependent (a `dependent_false<T>` trait) when it must wait for instantiation.
 - Never put a `static_assert` in a function a requires-expression must evaluate.
 - Fail at the interface, not deep inside a helper. A concept on the entry point gives a

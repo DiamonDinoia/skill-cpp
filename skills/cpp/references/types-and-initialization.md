@@ -13,7 +13,7 @@ initialization.
   exceptions: a container size (`std::vector<int> v(100)`), and a type whose
   `std::initializer_list` constructor would hijack the call.
 - `T x{};` value-initializes. `T x;` at block scope leaves a built-in member indeterminate.
-- Initialize with the final value directly; a branchy initializer is an immediately-invoked lambda.
+- Initialize with the final value directly; a branchy initializer is an immediately-invoked lambda. (C++11)
 - Prefer a default member initializer to repeating the value in every constructor.
 - Initialize members in the member initializer list. Members initialize in declaration order,
   not in the order written. Enable the warning for the mismatch.

@@ -31,7 +31,7 @@ sometimes returns a status forces every caller to handle both.
   rather than mixing.
 - A `noexcept` function that throws terminates. Mark `noexcept` only where the guarantee is
   real: move operations, `swap`, destructors, simple accessors.
-- The Lakos rule: no `noexcept` on a narrow contract, even when every in-contract call never throws; document the non-throwing instead.
+- The Lakos rule: no `noexcept` on a narrow contract, even when every in-contract call never throws; document the non-throwing instead. (C++11)
 
 ## Exception safety guarantees
 
@@ -59,7 +59,7 @@ Practical rules:
 - `std::optional<T>` when the failure carries no information beyond "nothing".
 - `std::expected<T, E>` (C++23) when the caller needs the reason. Before C++23, a
   `std::variant<T, E>` or a project type of the same shape.
-- For a generic visitor over a `std::variant`, `static_assert` invocability with every alternative before forwarding it.
+- For a generic visitor over a `std::variant`, `static_assert` invocability with every alternative before forwarding it. (C++17)
 - The diagnostic moves from instantiation depth to one line.
 - Mark such a return `[[nodiscard]]`, otherwise the error is silently discardable.
 - Keep the error type small and cheap to move. No heap-allocated string on the hot failure

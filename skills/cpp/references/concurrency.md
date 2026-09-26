@@ -24,7 +24,7 @@ between threads.
 - `const` is not thread-safe. It means "does not modify the observable state", and a `const`
   member with a cache needs a mutex.
 - `mutable` marks members that synchronization owns, such as the mutex itself; any other
-  mutable member shared between threads is a smell.
+  mutable member shared between threads is a smell. (C++11)
 - A "benign" race does not exist in the standard's model.
 
 ## Locks
@@ -36,10 +36,10 @@ between threads.
   Inconsistent order is the classic deadlock.
 - Keep the critical section short, and free of blocking calls, user code and callbacks.
 - Group shared data with its mutex in one struct; the partitioning of what the lock protects
-  stays visible to the reader.
+  stays visible to the reader. (C++11)
 - A spinlock is for a short, rarely contended section or a microsecond handoff on a dedicated
   core; elsewhere a sleeping mutex wins, and an idle worker sleeps on a condition variable
-  instead of busy-waiting.
+  instead of busy-waiting. (C++11)
 - Never wait on a condition variable without a predicate. Spurious wakeups are permitted.
 - `std::recursive_mutex` usually means the public and private layers are not separated. Split
   them.
@@ -52,7 +52,7 @@ between threads.
   reason about it.
 - A `std::atomic<T>` on a large type compiles but locks. Gate a hot-path atomic with
   `static_assert(std::atomic<T>::is_always_lock_free)`. Two atomics are not one: a check over
-  separately loaded atomics races. Never `memory_order_consume`.
+  separately loaded atomics races. Never `memory_order_consume`. (C++11)
 - Use acquire/release only with a written argument for why it suffices, and pair every release
   with the acquire that reads it.
 - Relaxed ordering is for counters nobody uses to guard data: statistics, reference-count
@@ -80,13 +80,13 @@ between threads.
 - `std::async` with the default policy may run synchronously, so pass `std::launch::async`
   when a thread is required. The returned future blocks in its destructor.
 - Propagate exceptions across threads through the future, or catch and translate at the thread
-  boundary. An escaping exception terminates.
+  boundary.
 - Coordinate with `std::latch`, `std::barrier` and `std::counting_semaphore` (C++20) instead
   of hand-rolled condition variable protocols.
 - Never create a thread per work item. Size the pool from the hardware and the workload, and
   respect any external limit on the machine.
 - Partition work by urgency: nothing slow on responsive threads, a dedicated thread for
-  long-running tasks, a pool for everything else.
+  long-running tasks, a pool for everything else. (C++11)
 
 ## Parallel algorithms
 
@@ -97,7 +97,7 @@ between threads.
 - `par` requires race-free element operations. `par_unseq` also forbids synchronization in the
   body, locks and allocation included, because calls may interleave within a thread.
 - Element access functions must not throw: an escaping exception terminates. Temporary
-  storage may throw `bad_alloc`, so leave budget for it.
+  storage may throw `bad_alloc`, so leave budget for it. (C++17)
 - `std::reduce` and `std::transform_reduce` parallelize where `std::accumulate` cannot. They
   require an associative, commutative operation, which reorders floating-point summation and
   changes the last digits.
@@ -116,7 +116,7 @@ between threads.
   coroutines for I/O-bound and latency-bound work, not inside a hot numeric loop.
 - A coroutine capturing a reference to a caller's temporary dangles. The frame outlives the
   expression that created it.
-- Never make a blocking call in a coroutine on a cooperative scheduler: it starves every
+- Never make a blocking call in a coroutine (C++20) on a cooperative scheduler: it starves every
   other task. Hold no lock and no thread-affine state across a suspension point; the
   resumption may be on a different thread.
 - Generators and lazy sequences are in `lazy-evaluation-and-proxies.md`.

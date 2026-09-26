@@ -81,7 +81,7 @@ Free at design time, and not premature optimization:
 - Avoid a `shared_ptr` copy on a hot path: two atomic operations.
 - Hoist the buffer out of the loop instead of allocating inside it.
 - Avoid `std::endl` and `std::function` on hot inner paths; indirect calls also pay CFI
-  checks, so cut virtual dispatch first.
+  checks, so cut virtual dispatch first. (C++11)
 
 ## Memory is the usual bottleneck
 

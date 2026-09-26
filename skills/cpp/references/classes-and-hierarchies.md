@@ -12,7 +12,7 @@ choosing between inheritance and an alternative.
   or by a smart pointer.
 - A bundle of data with no invariant is a `struct` with public members and no member functions
   beyond construction. No getters and setters that only forward.
-- `std::monostate`, `std::nullopt_t` and `std::ignore` are bottom types that signal a
+- `std::monostate`, `std::nullopt_t` and `std::ignore` (C++17) are bottom types that signal a
   defined absence; reach for them over invented sentinel member values.
 - An invariant-holding type keeps data private, establishes the invariant in every constructor,
   and preserves it in every public member function. State the invariant once, in a comment or a
@@ -90,7 +90,7 @@ code. A member gives the reuse without the coupling.
   the object itself.
 - `alignas` for over-aligned types, taken from the property that requires it, never from a
   hardcoded literal.
-- Pin a wire or ABI layout with `static_assert` on size, alignment and offsets: a layout
+- Pin a wire or ABI layout with `static_assert` (C++11) on size, alignment and offsets: a layout
   drift fails the build instead of corrupting exchanged data.
 - Prefer `private` by default, and `protected` only for a hook a derived class must reach.
 - A `friend` is part of the interface. Prefer a hidden friend for a type's operators.
@@ -116,7 +116,7 @@ code. A member gives the reuse without the coupling.
   equality. Equal objects must hash equally. Combine member hashes through the hash algorithm
   itself: initialize and finalize once per aggregate, feed bases and members in one pass. A
   fixed numeric combine recipe pollutes the hash and can be unsound. `std::pair` and
-  `std::tuple` have no `std::hash` specialization; write one for a key of that shape.
+  `std::tuple` have no `std::hash` specialization (C++11); write one for a key of that shape.
 - Comparison must be a strict weak ordering. A comparator that returns true for equal elements
   corrupts a sort and is undefined behaviour.
 - For a partial order, `a >= b` is `a > b || a == b`, never `!(a < b)`; write equivalence

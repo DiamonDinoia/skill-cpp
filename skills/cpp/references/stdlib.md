@@ -31,7 +31,7 @@ the project already has, then write code.
   the default hash is not fast, so profile before assuming.
 - When output depends on iteration order: never iterate an unordered container directly, sort
   with a total predicate over all fields, and detect hidden order dependence by shuffling the
-  input first.
+  input first. (C++11)
 - Prefer `emplace`, `try_emplace` and `insert_or_assign` to find-then-insert double lookups.
 - To erase from a container whose order does not matter, swap the element to the back and
   erase it there: constant time instead of shifting.
@@ -84,7 +84,7 @@ the project already has, then write code.
 - `std::format` (C++20) for formatting, `std::print` (C++23) for output. Before C++20, a
   stream, or the fmt library if the project already has it. `printf` is not type-safe.
 - Specialize `std::formatter` for a project type with `parse()` and `format()`, and throw
-  `std::format_error` from `parse()` on a bad specifier.
+  `std::format_error` from `parse()` on a bad specifier. (C++20)
 - `std::from_chars` and `std::to_chars` (C++17) are the fast, locale-independent,
   allocation-free conversions. `stoi`, `atoi` and `stringstream` are slower and
   locale-dependent. They give an exact floating-point round trip: print with `max_digits10`
@@ -103,10 +103,10 @@ the project already has, then write code.
 - `<chrono>` for all time. Never an `int` of unspecified units: the type carries the unit.
   `steady_clock` for stopwatches, `system_clock` for calendars; `high_resolution_clock` is an
   alias - avoid it. Leave the type system only knowingly: `duration_cast` names a truncation,
-  `count()` belongs at the I/O boundary.
+  `count()` belongs at the I/O boundary. (C++11)
 - `<random>` for randomness. Seed a named engine explicitly, never call `rand()`, and remember
   distributions are stateful and not portable across implementations. Never range-map with
-  modulo; `uniform_int_distribution` owns uniformity.
+  modulo; `uniform_int_distribution` owns uniformity. (C++11)
 - `<bit>` (C++20) for `bit_cast`, `popcount`, `countl_zero`, `has_single_bit` and `bit_width`,
   replacing compiler builtins behind macros.
 - `<numeric>` for `accumulate`, `reduce`, `inner_product`, `gcd`, `lcm`, `midpoint`, `iota` and

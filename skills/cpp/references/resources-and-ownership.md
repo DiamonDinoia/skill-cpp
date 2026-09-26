@@ -21,11 +21,11 @@ and ownership.
 - `std::shared_ptr` only when ownership is genuinely shared and the last owner is unknown. It
   costs an allocation, two atomic counters, and it hides the lifetime from the reader.
 - The control block also costs code: libstdc++ instantiates a dispose/destroy vtable per
-  pointee type, so many distinct `shared_ptr<T>` uses are measurable bloat.
+  pointee type, so many distinct `shared_ptr<T>` uses are measurable bloat. (C++11)
 - `std::weak_ptr` breaks cycles and expresses "may be gone". A cycle of `shared_ptr` leaks.
 - In an asynchronous chain, keep the object alive by capturing a `shared_ptr` in every
   handler; a self-vending class hands out `shared_from_this()`. Pass the `shared_ptr` by
-  value only when the callee takes over lifetime.
+  value only when the callee takes over lifetime. (C++11)
 - Prefer a value member to any pointer. A container of values beats a container of pointers
   unless polymorphism or stable addresses are required.
 - No `new` and no `delete` in application code. Use `std::make_unique`, `std::make_shared`, or
@@ -92,7 +92,7 @@ and ownership.
 - Wrap the C handle in a `unique_ptr` with a stateless deleter, or in a purpose-built RAII
   class when release takes more than one call.
 - Guard a custom deleter against an incomplete pointee with `static_assert(sizeof(T) > 0)`
-  inside it.
+  inside it. (C++11)
 - Convert at the boundary. Take ownership on the way in, release it explicitly on the way out,
   and never let a raw handle circulate in the rest of the code.
 - `std::out_ptr` and `std::inout_ptr` (C++23) adapt a smart pointer to a C function that writes

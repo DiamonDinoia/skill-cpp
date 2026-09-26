@@ -12,7 +12,7 @@ boundary, or fixing include and link problems.
   triggers a rebuild on every change.
 - Forward declare a type when only a pointer or a reference to it appears in the header.
   Include the header that defines an enum rather than forward-declaring it; a diverging
-  underlying type changes the struct's `sizeof`.
+  underlying type changes the struct's `sizeof`. (C++11)
 - Order includes so each header proves it is self-contained: own header, project, third party,
   standard.
 - Use `#pragma once`, or include guards named after the project and the path. Never a name
@@ -69,7 +69,7 @@ boundary, or fixing include and link problems.
   fragment, and never `#include` a header after an import that brought the same declarations.
   A scanning build system orders module compilation; without one, compile a module before its
   importers. Modules fix parse cost, not dependency management or ABI; the diamond problems
-  remain.
+  remain. (C++20)
 - The full set of build-speed levers is in `compile-speed.md`.
 
 ## Library boundaries and ABI
