@@ -34,16 +34,21 @@ that appears only in one build configuration.
 
 - Sanitizers: address, undefined behaviour, thread, leak. They report the cause with a stack,
   not the symptom.
+- Default to a RelWithDebInfo-type build: optimizations stay on, and release crashes stay
+  debuggable. For a debug build at optimization, `-Og` plus `-g3` keeps variables visible.
 - The debugger: a breakpoint, a watchpoint on the corrupted value, and the backtrace at the
   fault. A watchpoint finds the writer of a corrupted field faster than any amount of reading.
 - Core dumps: enable them where the failure happens, and keep the binary and its debug
   information for the exact build.
+- Crash-time code runs only async-signal-safe calls out of pre-allocated storage; a signal
+  handler that allocates can deadlock under the crash.
 - Assertions: a failing assertion close to the cause beats a crash far from it. Add them while
   debugging and keep the ones that document an invariant.
 - Logging: structured, levelled, and cheap when disabled. Log decisions and boundary values, not
   every step. A log that must be enabled to reproduce is a timing change.
 - The compiler: a stronger warning set, a second compiler, and the optimization reports often
   name the problem directly.
+- A compiler crash wants an automated reducer (C-Reduce, llvm-reduce) to a minimal case.
 - Static analysis: cheap on the changed files, and it finds what review misses.
 - Memory and heap profilers: for leaks, growth and fragmentation.
 - `printf` debugging: legitimate, and often fastest, when the environment has no debugger.

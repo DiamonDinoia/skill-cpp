@@ -56,6 +56,8 @@ still wrong.
 
 - Bitwise reproducibility across runs requires a fixed operation order: a fixed thread count and
   partitioning, no atomic accumulation, no work stealing over floating-point reductions.
+- For reproducible parallel sums, prefer fixed-precision integer arithmetic; higher-precision
+  floating point still reorders.
 - Bitwise reproducibility across compilers or machines also requires controlling contraction,
   vector width and the library implementations of transcendental functions, which are not
   standardized.

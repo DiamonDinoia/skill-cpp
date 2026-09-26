@@ -48,6 +48,8 @@ changes while the principle does not.
   of startup.
 - Memory-mapped registers are `volatile`, and `volatile` means "do not elide or reorder this
   access", not "atomic" and not "thread-safe".
+- Model memory-mapped registers as a small class with member functions, reached through a
+  pointer placed at the device address; prefer that over overlaying bitfields.
 - An interrupt handler shares data with the main flow: use an atomic, disable the interrupt
   around the access, or use a lock-free single-producer queue. The thread-safety rules apply even
   without threads.

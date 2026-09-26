@@ -70,6 +70,7 @@ write it once that is decided.
   pays in register pressure and spills.
 - The tail is where the bugs are. Test the size one element past a full batch, one short of it,
   zero, and one.
+- An overlapped recompute of the tail beats a serial remainder loop where the buffer allows it.
 - Reassociation changes results. A vectorized reduction sums in a different order than the
   scalar one. The difference is legitimate, and the test's tolerance must come from the error
   bound, not from what the scalar version happened to produce.

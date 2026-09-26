@@ -75,11 +75,13 @@ Free at design time, and not premature optimization:
 - Pass expensive types by reference, cheap ones by value.
 - `reserve` before a known number of insertions.
 - Move instead of copying, and keep move operations `noexcept`.
-- Construct in place instead of constructing then copying.
-- Prefer `++it` over `it++` for non-trivial iterators.
+- Construct in place instead of constructing then copying; `++it`, not `it++`.
+- A narrow contract (undefined behaviour on out-of-contract input) buys optimizer freedom;
+  pair it with a detectable check.
 - Avoid a `shared_ptr` copy on a hot path: two atomic operations.
 - Hoist the buffer out of the loop instead of allocating inside it.
-- Avoid `std::endl`, `std::function` and virtual dispatch on hot inner paths.
+- Avoid `std::endl` and `std::function` on hot inner paths; indirect calls also pay CFI
+  checks, so cut virtual dispatch first.
 
 ## Memory is the usual bottleneck
 

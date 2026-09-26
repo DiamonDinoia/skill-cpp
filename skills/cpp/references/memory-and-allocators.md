@@ -9,8 +9,12 @@ or memory footprint.
   magnitude. Most "slow code" waits for memory instead of computing.
 - The unit of transfer is the cache line, not the byte. Touching one byte pulls the whole line,
   and touching every 64th byte wastes the entire bandwidth.
+- A store costs a cache-line read first on a miss: writes imply reads. Full-line writes
+  can skip the fetch.
 - Hardware prefetchers follow linear forward and backward strides. A pointer chase defeats
   them, an indexed array does not.
+- Split a dependent-pointer walk into a gather pass and a compute pass so the misses
+  overlap in flight instead of serializing.
 - Virtual memory adds page-table lookups. A large working set thrashes the TLB even when the
   data is in cache. Huge pages help when the footprint is large and the access is scattered.
 - So shrink the working set, access it in order, and keep the fields used together next to each

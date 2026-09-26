@@ -46,6 +46,8 @@ makes style comments noise.
   reviewing the mixture.
 - A mechanical change (rename, format, move) should be reviewable mechanically. If it is mixed
   with a behaviour change, that is the first comment.
+- A generator- or LLM-produced change arrives as a reviewable diff a programmer signs off on,
+  never an invisible tooling pass; give its API boundaries and bounds discipline a second read.
 
 ## Writing the comments
 

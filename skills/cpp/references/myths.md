@@ -41,8 +41,13 @@ Load when a rule is being applied mechanically, when a review comment cites a ma
   hazard and an unclear lifetime. `unique_ptr` or a value is the default.
 - "Lock-free is faster than a mutex." A contended atomic serializes cache lines just as a lock
   does, and the code is far harder to get right.
+- "Zero-cost abstraction." The cost is zero only where the compiler can eliminate it; the
+  abstraction is a contract the build must keep, so check the generated code on the paths that
+  cannot afford it.
 - "Virtual calls are the bottleneck." An indirect call costs a few cycles, a cache miss costs
   hundreds. Measure before devirtualizing.
+- "Concepts and constraints bloat the binary." Constraint evaluation happens at compile time;
+  the generated code is the unconstrained one.
 - "Unsigned for anything non-negative." Unsigned arithmetic wraps, breaks reverse loops, and mixes
   badly with signed values in comparisons. Use signed for arithmetic, unsigned where the
   standard's interface already is.

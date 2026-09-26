@@ -48,6 +48,7 @@ job.
 | Time-of-check to time-of-use on a path | open once and operate on the handle, not the name |
 | Uninitialized memory disclosure | initialize every object; zero-fill buffers that cross a boundary |
 | Unchecked error return | `[[nodiscard]]` on every fallible operation |
+| ReDoS from a user-controlled pattern | no nested quantifiers on untrusted patterns; bound captures; time-box the match |
 
 ## Secrets and sensitive data
 
@@ -59,11 +60,13 @@ job.
   secure-zero function.
 - Use a vetted cryptographic library. Never implement a primitive, and never invent a protocol.
 - Compare secrets in constant time. A byte-by-byte comparison leaks the prefix length.
+- Never branch on a secret and never index memory with one: both leak through timing.
 
 ## Hardening the build
 
 The widely recommended baseline for a released binary, from the OpenSSF compiler hardening
-guidance:
+guidance. Sanitizer builds are not a production defense (overhead, bypassable redzones):
+they find defects, they do not mitigate them.
 
 - `-O2 -Wall -Wformat=2 -Wconversion -Wtrampolines -Wimplicit-fallthrough`, warnings as errors.
 - `-D_FORTIFY_SOURCE=3` (with `-U_FORTIFY_SOURCE` first) and `-D_GLIBCXX_ASSERTIONS` for checked
