@@ -67,11 +67,13 @@ and [cppreference](https://en.cppreference.com/).
 | Claude Code | `claude plugin marketplace add DiamonDinoia/skill-cpp && claude plugin install cpp@cpp --scope user` |
 | Codex CLI | `codex plugin marketplace add DiamonDinoia/skill-cpp`, then `codex plugin add cpp@cpp` |
 | Gemini CLI | `gemini extensions install https://github.com/DiamonDinoia/skill-cpp --consent` |
+| opencode (by hand, scripted) | `git clone https://github.com/DiamonDinoia/skill-cpp && ./skill-cpp/install-opencode.sh` |
 | by hand | `git clone https://github.com/DiamonDinoia/skill-cpp && ln -s "$PWD/skill-cpp/skills/cpp" ~/.claude/skills/cpp` |
 
 The three harnesses with a native manifest carry one in this repository: `.claude-plugin/` for
-Claude Code, `.codex-plugin/` for Codex, and `gemini-extension.json` for Gemini CLI. Any other
-harness: install by hand (last row).
+Claude Code, `.codex-plugin/` for Codex, and `gemini-extension.json` for Gemini CLI. opencode has
+no plugin system — `install-opencode.sh` links the skill and the `/cpp` command from a checkout.
+Any other harness: install by hand (last row).
 
 Claude Code: in `/plugin`, enable auto-update for the `cpp` marketplace. `claude plugin disable
 cpp@cpp` stops the skill. `claude plugin update cpp@cpp` pulls the new release. Claude Code loads
