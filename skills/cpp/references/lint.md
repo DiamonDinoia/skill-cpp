@@ -36,5 +36,8 @@ stays 0 for warnings, so grep the output for `warning:` and `error:` lines. Make
 code changes for each one and run the lint again until no `warning:` or `error:` line
 stays.
 
+The exit code stays 0 for warnings only. A nonzero exit code means a crash or an
+interrupt. Report that the lint did not complete.
+
 A use-after-move warning on an operation with no precondition (`clear()`, assignment,
 `size()` on a standard type) can be correct. Read the code before a change.

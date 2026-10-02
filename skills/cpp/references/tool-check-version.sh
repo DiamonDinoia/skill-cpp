@@ -11,5 +11,15 @@ fi
 out=$("$1" --version 2>&1) || { echo "$1: --version failed" >&2; exit 1; }
 ver=$(printf '%s\n' "$out" | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)
 [ -n "$ver" ] || { echo "$1: no version in --version output" >&2; exit 1; }
-[ "$(printf '%s\n' "$2" "$ver" | sort -V | head -1)" = "$2" ] || {
-  echo "$1 $ver < $2" >&2; exit 1; }
+# Too old iff any of the first three numeric components of $ver is below $2's.
+# awk is POSIX; sort -V is a GNU extension.
+older=$(awk -v a="$ver" -v b="$2" 'BEGIN {
+  n=split(a,x,"."); m=split(b,y,".");
+  for (i=1; i<=3; i++) {
+    p=(i<=n ? x[i] : 0)+0; q=(i<=m ? y[i] : 0)+0;
+    if (p<q) { print 1; exit } else if (p>q) { print 0; exit }
+  }
+  print 0
+}')
+[ "$older" = 1 ] && { echo "$1 $ver < $2" >&2; exit 1; }
+exit 0

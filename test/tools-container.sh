@@ -36,10 +36,12 @@ check() { podman run --rm -v "$root/skills/cpp:/skill:ro" "$img" \
 # Case: present and new enough. The version check passes, the lint catches all 3
 # test bugs, cppman prints a page.
 echo "== case: present, new enough (clang-tidy 18.1.1, cppman 0.5.9)"
-min_ct=$(rg -oP '^\| clang-tidy \| \K[0-9.]+' "$root/skills/cpp/references/tool-check.md")
-min_cp=$(rg -oP '^\| cppman \| \K[0-9.]+' "$root/skills/cpp/references/tool-check.md")
+min_ct=$(awk -F'|' '/clang-tidy/ {gsub(/[ ]/,"",$3); print $3}' "$root/skills/cpp/references/tool-check.md")
+min_cp=$(awk -F'|' '/cppman/     {gsub(/[ ]/,"",$3); print $3}' "$root/skills/cpp/references/tool-check.md")
 check clang-tidy "$min_ct" || { echo "version check rejected the installed clang-tidy"; exit 1; }
 check cppman "$min_cp" || { echo "version check rejected the installed cppman"; exit 1; }
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
 podman run --rm -v "$root/test/files:/files:ro" "$img" bash -c '
 set -eu -o pipefail
 cp /files/bugs.cpp /files/CMakeLists.txt .
@@ -59,13 +61,13 @@ if grep -q "error:" lint.out; then echo "HAS_ERROR_LINES"; else echo "NO_ERROR_L
 grep -E "warning:" lint.out | grep -oE "\[[a-z-]+\]$" | sort -u
 echo "CPPMAN_RC=$rc2"
 grep -c push_back page.txt || echo 0
-' > case.out
-cl_rc=$(command grep -oE '[0-9]+$' <<<"$(command grep '^CLANG_TIDY_RC=' case.out)")
-cp_rc=$(command grep -oE '[0-9]+$' <<<"$(command grep '^CPPMAN_RC=' case.out)")
-pback=$(command tail -n 1 case.out)
-out=$(command grep '^\[' case.out)
+' > "$tmp"
+cl_rc=$(command grep -oE '[0-9]+$' <<<"$(command grep '^CLANG_TIDY_RC=' "$tmp")")
+cp_rc=$(command grep -oE '[0-9]+$' <<<"$(command grep '^CPPMAN_RC=' "$tmp")")
+pback=$(command tail -n 1 "$tmp")
+out=$(command grep '^\[' "$tmp")
 [ "$cl_rc" = 0 ] || { echo "clang-tidy exit $cl_rc, expected 0"; exit 1; }
-grep -q '^NO_ERROR_LINES$' case.out || { echo "lint has error: lines"; exit 1; }
+command grep -q '^NO_ERROR_LINES$' "$tmp" || { echo "lint has error: lines"; exit 1; }
 [ "$cp_rc" = 0 ] || { echo "cppman exit $cp_rc, expected 0"; exit 1; }
 [ "$pback" -ge 1 ] || { echo "cppman page has no push_back"; exit 1; }
 missing=0
