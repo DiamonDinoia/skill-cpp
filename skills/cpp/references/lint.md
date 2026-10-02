@@ -1,37 +1,41 @@
 # Lint with clang-tidy
 
 Run this lint after the agent writes or edits C++ code. First do the tool check for
-clang-tidy (`references/tool-check.md`, minimum 22.1.0)
+clang-tidy (`references/tool-check.md`, minimum 22.1.0).
 
-The lint uses a compile database. Configure the project one time with:
+## Find the compile database
+
+The lint uses a compile database. First look for one in the project:
 
 ```bash
-cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_FLAGS='-Wall' .
+find . -name compile_commands.json -not -path './.git/*'
 ```
 
-`-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` writes `build/compile_commands.json`. `-Wall` is
-necessary: the unused-variable diagnostic is a compiler warning (`clang-diagnostic-*`)
-that clang-tidy shows only when the compile flags have `-Wall`.
-
-Lint one file:
+Give the directory that holds it to `-p`. If the project uses CMake and has none,
+configure the project one time with:
 
 ```bash
-clang-tidy -p build \
+cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .
+```
+
+Do not overwrite `CMAKE_CXX_FLAGS`. `-Wall` goes in the clang-tidy call below. If the
+project does not use CMake, its build system must export a compile database (Meson
+writes one in its output directory by default). If that is not possible, say so and do
+not lint.
+
+## Run the lint
+
+```bash
+clang-tidy -p <dir-with-compile_commands.json> \
   --checks='bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions' \
+  --extra-arg=-Wall \
   <file>
 ```
 
+`--extra-arg=-Wall` is necessary: the unused-variable diagnostic is a compiler
+diagnostic (`clang-diagnostic-*`) that clang-tidy shows only when `-Wall` is on.
+
 Each diagnostic is one line: `file:line:col: warning: ... [check-name]`. The exit code
-stays 0 for warnings, so grep the output for `warning:` and `error:` lines. Make the code
-changes for each one and run the lint again until no `warning:` or `error:` line stays.
-
-If the project has no compile database (`build/compile_commands.json` is missing), say so
-and give the cmake configure line above.
-
-## Why not clangd --check or the MCP server
-
-`clangd --check=<file>` prints only a total error count (`All checks completed, N errors`)
-and no warning text, so the agent learns nothing from it. The clangd MCP language server
-prints real diagnostics but uses a Go toolchain, a daemon and a `.clangd` file for each
-workspace, and in testing it caught 2 of the 3 bugs the clang-tidy command catches. One
-tool, one command, no daemon: use clang-tidy.
+stays 0 for warnings, so grep the output for `warning:` and `error:` lines. Make the
+code changes for each one and run the lint again until no `warning:` or `error:` line
+stays.

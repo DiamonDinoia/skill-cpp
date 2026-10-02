@@ -7,14 +7,16 @@ both. The only difference is the minimum version.
 
 1. `command -v <tool>` finds the executable. If it fails, the tool is missing.
 2. `<tool> --version` prints the version. Compare it with the minimum below. A `sort -V`
-   check works for both:
+   check works for both (`2>&1`: cppman writes its version to stderr):
 
    ```bash
-   [ "$(printf '%s\n' "$MIN" "$(clang-tidy --version | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)" | sort -V | head -1)" = "$MIN" ]
+   [ "$(printf '%s\n' "$MIN" "$(clang-tidy --version 2>&1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)" | sort -V | head -1)" = "$MIN" ]
    ```
 
    Replace `$MIN` and the tool name. The test prints nothing and sets the exit code: 0 is
-   new enough, 1 is too old.
+   new enough, 1 is too old. The same check stands in `tool-check-version.sh` next to
+   this file: `tool-check-version.sh <tool> <min>` exits 0 (OK), 1 (too old) or 2 (not
+   found). Use it when a script needs the check.
 
 ## Minimum versions
 

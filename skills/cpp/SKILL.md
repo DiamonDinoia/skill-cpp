@@ -135,13 +135,10 @@ principles hold, the available mechanisms do not.
 2. Answer, in the response, "is this the simplest code that achieves the goal?".
 3. Name the check that fails if the logic breaks, and run it on the smallest input.
 4. Lint every C++ file the agent wrote or edited (`references/lint.md`). Tool check first
-   (`references/tool-check.md`, minimum 22.1.0). The project needs
-   `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` and `-Wall`; then run
-   `clang-tidy -p build --checks='bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions' <file>`
-   and fix each `warning:` and `error:` line. No compile database: say so and give the
-   cmake line from `references/lint.md`. `clangd --check` prints only an error count, not
-   diagnostics, and the clangd MCP server needs Go and a daemon and caught 2 of the 3 test
-   bugs; clang-tidy is the one command that works.
+   (`references/tool-check.md`, minimum 22.1.0). Find the project's compile database
+   (CMake: `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`; Meson writes one by default) and run
+   `clang-tidy -p <dir> --checks='bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions' --extra-arg=-Wall <file>`.
+   Fix each `warning:` and `error:` line.
 5. Confirm the build is warning-clean and no feature exceeds the detected standard.
 6. For a performance change, attach the evidence: profile, counters or assembly, minimum
    over repetitions, against an unchanged control.

@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Builds podman images from scratch and checks the tool-check rule in this repo
-# (skills/cpp/references/tool-check.md) for cppman and clang-tidy. Three cases per
-# tool: present and new enough (the lint catches all 3 test bugs, cppman prints a
-# page), missing (no executable), too old (a fake script on PATH prints an old
-# version and the version check, run as the skill text states it, flags it).
-# Needs network. test/run.sh does not call this script.
+# Builds a podman image from scratch and checks the tool-check rule in this repo
+# (skills/cpp/references/tool-check.md) for cppman and clang-tidy. Three cases:
+# present and new enough (the version check passes, the lint catches all 3 test
+# bugs, cppman prints a page), missing (no executable), too old (a fake script on
+# PATH prints an old version and the version check flags it). The version check
+# under test is skills/cpp/references/tool-check-version.sh, the helper the skill
+# text states; the minimums come from the table in tool-check.md. Needs network.
+# test/run.sh does not call this script.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 img=skill-cpp-tools-test
@@ -27,17 +29,25 @@ ENV PATH="/home/agent/.local/bin:${PATH}"
 WORKDIR /home/agent/proj
 EOF
 
-# Case: present and new enough. The lint must catch all 3 test bugs and cppman must
-# print a page.
+# The version check under test, run inside the container with the repo mounted.
+check() { podman run --rm -v "$root/skills/cpp:/skill:ro" "$img" \
+  bash /skill/references/tool-check-version.sh "$1" "$2"; }
+
+# Case: present and new enough. The version check passes, the lint catches all 3
+# test bugs, cppman prints a page.
 echo "== case: present, new enough (clang-tidy 22.1.0, cppman 0.5.9)"
+min_ct=$(rg -oP '^\| clang-tidy \| \K[0-9.]+' "$root/skills/cpp/references/tool-check.md")
+min_cp=$(rg -oP '^\| cppman \| \K[0-9.]+' "$root/skills/cpp/references/tool-check.md")
+check clang-tidy "$min_ct" || { echo "version check rejected the installed clang-tidy"; exit 1; }
+check cppman "$min_cp" || { echo "version check rejected the installed cppman"; exit 1; }
 out=$(podman run --rm -v "$root/test/files:/files:ro" "$img" bash -c '
 set -u
 cp /files/bugs.cpp /files/CMakeLists.txt .
-cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_FLAGS="-Wall" . >/dev/null
+cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON . >/dev/null
 clang-tidy -p build \
   --checks="bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions" \
-  bugs.cpp 2>&1 | grep -E "warning:|error:" | grep -oE "\[[a-z-]+\]$" | sort -u > /tmp/found
-cat /tmp/found
+  --extra-arg=-Wall \
+  bugs.cpp 2>&1 | grep -E "warning:|error:" | grep -oE "\[[a-z-]+\]$" | sort -u
 cppman -s cppreference.com >/dev/null 2>&1
 cppman "vector" 2>/dev/null | cat | head -40 > /tmp/page || true
 wc -l < /tmp/page
@@ -50,36 +60,30 @@ done
 [ "$missing" -eq 0 ] || exit 1
 echo "present case PASSED"
 
-# Case: missing. An empty PATH hides the real tools; `command -v`, the first step of
-# the tool check, must report both tools as missing.
+# Case: missing. An empty PATH hides the real tools; the check reports not found.
 echo "== case: missing"
-out=$(podman run --rm "$img" bash -c '
+podman run --rm -v "$root/skills/cpp:/skill:ro" "$img" bash -c '
+set -eu
 export PATH=/usr/bin:/bin
-command -v clang-tidy || echo NO-CLANG-TIDY
-command -v cppman || echo NO-CPPMAN
-')
-grep -q NO-CLANG-TIDY <<<"$out" && grep -q NO-CPPMAN <<<"$out" || { echo "missing case FAILED: $out"; exit 1; }
+[ "$(bash /skill/references/tool-check-version.sh clang-tidy 22.1.0 || echo rc=$?)" = "rc=2" ]
+[ "$(bash /skill/references/tool-check-version.sh cppman 0.5.9 || echo rc=$?)" = "rc=2" ]
+' || { echo "missing case FAILED"; exit 1; }
 echo "missing case PASSED"
 
-# Case: too old. A fake tool prints an old version; the version check from the skill
-# text, run as written, exits 1.
+# Case: too old. Fake tools print an old version; the check exits 1.
 echo "== case: too old (fake scripts)"
-podman run --rm -v "$root/skills/cpp/references:/refs:ro" "$img" bash -c '
+podman run --rm -v "$root/skills/cpp:/skill:ro" "$img" bash -c '
 set -eu
 mkdir -p bin
 printf "#!/bin/sh\necho clang-tidy version 21.1.0\n" > bin/clang-tidy
-printf "#!/bin/sh\necho cppman 0.5.0\n" > bin/cppman
+printf "#!/bin/sh\necho cppman Ver 0.5.0\n" > bin/cppman
 chmod +x bin/*
 export PATH="$PWD/bin:/usr/bin:/bin"   # fakes first; user tools hidden
-for spec in "clang-tidy 22.1.0" "cppman 0.5.9"; do
-  tool=${spec% *}; min=${spec#* }
-  # The version check exactly as references/tool-check.md states it:
-  ver=$("$tool" --version | grep -oE "[0-9]+\.[0-9]+(\.[0-9]+)?" | head -1)
-  if [ "$(printf "%s\n" "$min" "$ver" | sort -V | head -1)" = "$min" ]; then
-    echo "TOO-OLD CHECK FAILED: $tool $ver passed against $min"; exit 1
-  fi
-  echo "TOO-OLD CHECK OK: $tool $ver < $min"
-done
-' | { grep -c "TOO-OLD CHECK OK" | grep -qx 2 || { echo "too-old case FAILED"; exit 1; }; echo "too-old case PASSED"; }
+ok=0
+bash /skill/references/tool-check-version.sh clang-tidy 22.1.0 || ok=$((ok+1))
+bash /skill/references/tool-check-version.sh cppman 0.5.9 || ok=$((ok+1))
+[ "$ok" -eq 2 ]
+' || { echo "too-old case FAILED"; exit 1; }
+echo "too-old case PASSED"
 
 echo "ALL TOOL CHECKS PASSED"
