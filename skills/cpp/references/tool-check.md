@@ -6,24 +6,23 @@ both. The only difference is the minimum version.
 ## The check
 
 1. `command -v <tool>` finds the executable. If it fails, the tool is missing.
-2. `<tool> --version` prints the version. Compare it with the minimum below. A `sort -V`
-   check works for both (`2>&1`: cppman writes its version to stderr):
+2. `<tool> --version` prints the version (cppman writes it to stderr). Compare it with the
+   minimum below. Run the check:
 
    ```bash
-   [ "$(printf '%s\n' "$MIN" "$(clang-tidy --version 2>&1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)" | sort -V | head -1)" = "$MIN" ]
+   sh tool-check-version.sh <tool> <min>
    ```
 
-   Replace `$MIN` and the tool name. The test prints nothing and sets the exit code: 0 is
-   new enough, 1 is too old. The same check stands in `tool-check-version.sh` next to
-   this file: `tool-check-version.sh <tool> <min>` exits 0 (OK), 1 (too old) or 2 (not
-   found). Use it when a script needs the check.
+   The script stands next to this file. If `--version` gives a nonzero exit status, the
+   check stops. Exit 0: the version is correct. Exit 1: the version is too low, the
+   output has no version, or `--version` gave an error. Exit 2: the tool is missing.
 
 ## Minimum versions
 
 | Tool | Minimum | Why |
 |---|---|---|
 | cppman | 0.5.9 | The oldest release that prints a page in a container test. 0.5.0 and 0.4.8 fail against the current cppreference.com pages; 0.5.9 works on Ubuntu 22.04 and 24.04. |
-| clang-tidy | 22.1.0 | The oldest release whose checks catch all test bugs in a container: 21.1.0 and older miss use-after-move (clang-tidy 13 and 14 find only 2 of the 3 bugs). |
+| clang-tidy | 18.1.1 | The oldest release whose checks catch all 3 test bugs in a container (narrowing, use after move of a `std::unique_ptr`, unused variable). 13 and 14 find only 2. 15 to 17 did not run in the container. |
 
 ## Missing or too old: ask the user first
 

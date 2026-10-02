@@ -1,7 +1,7 @@
 # Lint with clang-tidy
 
 Run this lint after the agent writes or edits C++ code. First do the tool check for
-clang-tidy (`references/tool-check.md`, minimum 22.1.0).
+clang-tidy (`references/tool-check.md`, minimum 18.1.1).
 
 ## Find the compile database
 
@@ -39,3 +39,6 @@ Each diagnostic is one line: `file:line:col: warning: ... [check-name]`. The exi
 stays 0 for warnings, so grep the output for `warning:` and `error:` lines. Make the
 code changes for each one and run the lint again until no `warning:` or `error:` line
 stays.
+
+A use-after-move warning on an operation with no precondition (`clear()`, assignment,
+`size()` on a standard type) can be correct. Read the code before a change.

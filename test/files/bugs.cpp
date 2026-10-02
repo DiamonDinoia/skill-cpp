@@ -1,12 +1,12 @@
-#include <string>
+#include <memory>
 #include <utility>
 
 int main() {
     long long big = 3000000000LL;
     int narrow = big;                             // narrowing conversion
-    std::string s = "hello";
-    std::string t = std::move(s);
-    int len = static_cast<int>(s.size());         // use-after-move: reads moved-from s
+    auto p = std::make_unique<int>(42);
+    auto q = std::move(p);
+    int deref = *p;                               // use-after-move: p is null, undefined behaviour
     int unused_var = 42;                          // unused variable
-    return narrow + len;
+    return narrow + deref + *q;
 }

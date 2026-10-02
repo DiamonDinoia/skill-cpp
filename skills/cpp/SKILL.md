@@ -134,11 +134,7 @@ principles hold, the available mechanisms do not.
 1. State the standard detected and the references used.
 2. Answer, in the response, "is this the simplest code that achieves the goal?".
 3. Name the check that fails if the logic breaks, and run it on the smallest input.
-4. Lint every C++ file the agent wrote or edited (`references/lint.md`). Tool check first
-   (`references/tool-check.md`, minimum 22.1.0). Find the project's compile database
-   (CMake: `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`; Meson writes one by default) and run
-   `clang-tidy -p <dir> --checks='bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions' --extra-arg=-Wall <file>`.
-   Fix each `warning:` and `error:` line.
+4. Lint every C++ file the agent wrote or edited (`references/lint.md`).
 5. Confirm the build is warning-clean and no feature exceeds the detected standard.
 6. For a performance change, attach the evidence: profile, counters or assembly, minimum
    over repetitions, against an unchanged control.
