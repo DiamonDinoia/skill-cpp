@@ -26,6 +26,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
  && uv tool install 'clang-tidy==18.1.1' \
  && uv tool install 'cppman==0.5.9'
 ENV PATH="/home/agent/.local/bin:${PATH}"
+RUN mkdir -p /home/agent/proj
 WORKDIR /home/agent/proj
 EOF
 

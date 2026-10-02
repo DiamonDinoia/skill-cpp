@@ -10,7 +10,7 @@ both. The only difference is the minimum version.
    minimum below. Run the check:
 
    ```bash
-   sh tool-check-version.sh <tool> <min>
+   sh <skill dir>/references/tool-check-version.sh <tool> <min>
    ```
 
    The script stands next to this file. If `--version` gives a nonzero exit status, the
