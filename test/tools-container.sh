@@ -21,8 +21,9 @@ RUN apt-get update -qq \
  && useradd -m agent
 USER agent
 WORKDIR /home/agent
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
- && . "$HOME/.local/bin/env" 2>/dev/null || export PATH="$HOME/.local/bin:$PATH" \
+RUN curl -fLsS -o /tmp/uv-install.sh https://astral.sh/uv/install.sh \
+ && sh /tmp/uv-install.sh \
+ && export PATH="/home/agent/.local/bin:$PATH" \
  && uv tool install 'clang-tidy==18.1.1' \
  && uv tool install 'cppman==0.5.9'
 ENV PATH="/home/agent/.local/bin:${PATH}"
@@ -100,6 +101,12 @@ printf "#!/bin/sh\necho tool version 99.0.0\nexit 3\n" > bin/broken
 chmod +x bin/*
 export PATH="$PWD/bin:/usr/bin:/bin"   # fakes first; user tools hidden
 rc() { bash /skill/references/tool-check-version.sh "$@" 2>/dev/null && echo 0 || echo $?; }
+# Boundary compares, fake tools per case. A lexical comparator fails at least one.
+mk() { printf "#!/bin/sh\necho \"tool version %s\"\n" "$1" > "bin/$2"; chmod +x "bin/$2"; }
+mk 18.10.0 t1810; mk 19.0.0 t19; mk 18.1 t181
+[ "$(rc t1810 18.9.0)" = 0 ]   # 18.10.0 vs 18.9.0: numeric accept, lexical reject
+[ "$(rc t19 18.9.9)" = 0 ]     # 19.0.0 vs 18.9.9: numeric accept, lexical reject
+[ "$(rc t181 18.1.1)" = 1 ]    # 18.1 vs 18.1.1: reject
 [ "$(rc clang-tidy 18.1.1)" = 1 ]
 [ "$(rc cppman 0.5.9)" = 1 ]
 [ "$(rc nover 1.0)" = 1 ]

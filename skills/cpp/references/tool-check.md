@@ -22,7 +22,7 @@ both. The only difference is the minimum version.
 | Tool | Minimum | Why |
 |---|---|---|
 | cppman | 0.5.9 | The oldest release that prints a page in a container test. 0.5.0 and 0.4.8 fail against the current cppreference.com pages; 0.5.9 works on Ubuntu 22.04 and 24.04. |
-| clang-tidy | 18.1.1 | The oldest release whose checks catch all 3 test bugs in a container (narrowing, use after move of a `std::unique_ptr`, unused variable). 13 and 14 find only 2. 15 to 17 did not run in the container. |
+| clang-tidy | 18.1.1 | The oldest tested release whose checks catch all 3 test bugs in a container (narrowing, use after move of a `std::unique_ptr`, unused variable). 13 and 14 find only 2. 15 to 17 were not tested. |
 
 ## Missing or too old: ask the user first
 

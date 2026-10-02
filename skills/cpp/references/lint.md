@@ -23,7 +23,7 @@ directory by default). If that is not possible, say so and do not lint.
 
 ```bash
 clang-tidy -p <dir-with-compile_commands.json> \
-  --checks='-*,bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions' \
+  --checks='bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions' \
   --extra-arg=-Wall \
   <file>
 ```
@@ -34,7 +34,8 @@ diagnostic (`clang-diagnostic-*`) that clang-tidy shows only when `-Wall` is on.
 Each diagnostic is one line: `file:line:col: warning: ... [check-name]`. The exit code
 stays 0 for warnings, so grep the output for `warning:` and `error:` lines. Make the
 code changes for each one and run the lint again until no `warning:` or `error:` line
-stays.
+stays. A project's `.clang-tidy` can add checks. Fix the diagnostics in the lines the
+edit touched. Report the others. Do not fix them.
 
 The exit code stays 0 for warnings only. A nonzero exit code means clang-tidy reported a
 problem it treats as an error (a compile error, or a warning promoted by
