@@ -23,7 +23,7 @@ directory by default). If that is not possible, say so and do not lint.
 
 ```bash
 clang-tidy -p <dir-with-compile_commands.json> \
-  --checks='bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions' \
+  --checks='-*,bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions' \
   --extra-arg=-Wall \
   <file>
 ```
@@ -36,8 +36,8 @@ stays 0 for warnings, so grep the output for `warning:` and `error:` lines. Make
 code changes for each one and run the lint again until no `warning:` or `error:` line
 stays.
 
-The exit code stays 0 for warnings only. A nonzero exit code means a crash or an
-interrupt. Report that the lint did not complete.
+The exit code stays 0 for warnings only. A nonzero exit code means the lint did not
+complete. Report its `error:` lines, for example a missing header or a `-Werror` flag.
 
 A use-after-move warning on an operation with no precondition (`clear()`, assignment,
 `size()` on a standard type) can be correct. Read the code before a change.

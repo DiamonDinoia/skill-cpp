@@ -48,7 +48,7 @@ cp /files/bugs.cpp /files/CMakeLists.txt .
 cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON . >/dev/null
 set +e
 clang-tidy -p build \
-  --checks="bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions" \
+  --checks="-*,bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions" \
   --extra-arg=-Wall \
   bugs.cpp > lint.out 2>&1
 rc=$?

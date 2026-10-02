@@ -20,6 +20,7 @@ older=$(awk -v a="$ver" -v b="$2" 'BEGIN {
     if (p<q) { print 1; exit } else if (p>q) { print 0; exit }
   }
   print 0
-}')
+}') || { echo "$1: version compare gave an error" >&2; exit 1; }
+[ -n "$older" ] || { echo "$1: version compare gave no output" >&2; exit 1; }
 [ "$older" = 1 ] && { echo "$1 $ver < $2" >&2; exit 1; }
 exit 0
