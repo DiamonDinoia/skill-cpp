@@ -11,17 +11,13 @@ The lint uses a compile database. First look for one in the project:
 find . -name compile_commands.json -not -path './.git/*'
 ```
 
-Give the directory that holds it to `-p`. If the project uses CMake and has none,
-configure the project one time with:
+Give the directory that holds it to `-p`. Never configure a new build tree. Use the
+project's configured build, with its preset, toolchain and options.
 
-```bash
-cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .
-```
-
-Do not overwrite `CMAKE_CXX_FLAGS`. `-Wall` goes in the clang-tidy call below. If the
-project does not use CMake, its build system must export a compile database (Meson
-writes one in its output directory by default). If that is not possible, say so and do
-not lint.
+If no compile database exists, say so. For a CMake project, propose to add
+`-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` to the project's configure step or preset, not as a
+separate command. Other build systems must export one (Meson writes one in its output
+directory by default). If that is not possible, say so and do not lint.
 
 ## Run the lint
 

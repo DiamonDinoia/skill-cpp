@@ -40,23 +40,38 @@ min_ct=$(rg -oP '^\| clang-tidy \| \K[0-9.]+' "$root/skills/cpp/references/tool-
 min_cp=$(rg -oP '^\| cppman \| \K[0-9.]+' "$root/skills/cpp/references/tool-check.md")
 check clang-tidy "$min_ct" || { echo "version check rejected the installed clang-tidy"; exit 1; }
 check cppman "$min_cp" || { echo "version check rejected the installed cppman"; exit 1; }
-out=$(podman run --rm -v "$root/test/files:/files:ro" "$img" bash -c '
-set -u
+podman run --rm -v "$root/test/files:/files:ro" "$img" bash -c '
+set -eu -o pipefail
 cp /files/bugs.cpp /files/CMakeLists.txt .
 cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON . >/dev/null
+set +e
 clang-tidy -p build \
   --checks="bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions" \
   --extra-arg=-Wall \
-  bugs.cpp 2>&1 | grep -E "warning:|error:" | grep -oE "\[[a-z-]+\]$" | sort -u
+  bugs.cpp > lint.out 2>&1
+rc=$?
 cppman -s cppreference.com >/dev/null 2>&1
-cppman "vector" 2>/dev/null | cat | head -40 > /tmp/page || true
-wc -l < /tmp/page
-')
+cppman "vector" > page.txt 2>/dev/null
+rc2=$?
+set -e
+echo "CLANG_TIDY_RC=$rc"
+if grep -q "error:" lint.out; then echo "HAS_ERROR_LINES"; else echo "NO_ERROR_LINES"; fi
+grep -E "warning:" lint.out | grep -oE "\[[a-z-]+\]$" | sort -u
+echo "CPPMAN_RC=$rc2"
+grep -c push_back page.txt || echo 0
+' > case.out
+cl_rc=$(command grep -oE '[0-9]+$' <<<"$(command grep '^CLANG_TIDY_RC=' case.out)")
+cp_rc=$(command grep -oE '[0-9]+$' <<<"$(command grep '^CPPMAN_RC=' case.out)")
+pback=$(command tail -n 1 case.out)
+out=$(command grep '^\[' case.out)
+[ "$cl_rc" = 0 ] || { echo "clang-tidy exit $cl_rc, expected 0"; exit 1; }
+grep -q '^NO_ERROR_LINES$' case.out || { echo "lint has error: lines"; exit 1; }
+[ "$cp_rc" = 0 ] || { echo "cppman exit $cp_rc, expected 0"; exit 1; }
+[ "$pback" -ge 1 ] || { echo "cppman page has no push_back"; exit 1; }
 missing=0
 for c in bugprone-use-after-move clang-diagnostic-unused-variable cppcoreguidelines-narrowing-conversions; do
   grep -q "\[$c\]" <<<"$out" || { echo "MISSING lint check: $c"; missing=1; }
 done
-[ "$(command tail -n 1 <<<"$out")" -ge 5 ] || { echo "cppman printed no page"; missing=1; }
 [ "$missing" -eq 0 ] || exit 1
 echo "present case PASSED"
 
