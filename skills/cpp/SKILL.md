@@ -58,6 +58,16 @@ with the fallback idiom, and its traps.
 - Match the project: its naming, formatting and error strategy. Consistency beats any
   external style guide, and the lowest-churn fix comes first.
 
+## 2a. cppman: library fact lookup
+
+Before the skill gives a signature, preconditions or complexity for a standard library
+entity, it looks them up in cppman. Find the page name: `cppman -f <name>`. Get the page
+text: `cppman '<name>' | cat` (stdout pipe prints, no pager). The source is
+cppreference.com, set it with `cppman -s cppreference.com`. A name with no match prints
+`error: <name>: nothing appropriate.` and exits 0: try a member name alone. Pages cache in ~/.cache/cppman for offline use. If cppman is missing, say so and give the
+install command: `uv tool install cppman`, or `python3 -m pip install --user --upgrade
+cppman` when uv is missing. Do not use sudo or a system-wide pip.
+
 ## 3. Universal red flags, fix on sight
 
 `new` or `delete` in application code. An owning raw pointer. A C cast. An uninitialized
