@@ -64,9 +64,9 @@ Before the skill gives a signature, preconditions or complexity for a standard l
 entity, it looks them up in cppman. Find the page name: `cppman -f <name>`. Get the page
 text: `cppman '<name>' | cat` (stdout pipe prints, no pager). The source is
 cppreference.com, set it with `cppman -s cppreference.com`. A name with no match prints
-`error: <name>: nothing appropriate.` and exits 0: try a member name alone. Pages cache in ~/.cache/cppman for offline use. If cppman is missing, say so and give the
-install command: `uv tool install cppman`, or `python3 -m pip install --user --upgrade
-cppman` when uv is missing. Do not use sudo or a system-wide pip.
+`error: <name>: nothing appropriate.` and exits 0: try a member name alone. Pages cache in ~/.cache/cppman for offline use. Before the first use, do the tool check for cppman
+(`references/tool-check.md`, minimum 0.5.9). Missing or too old: ask the user before any
+install; with a no, continue without cppman and say the lookup did not run.
 
 ## 3. Universal red flags, fix on sight
 
@@ -114,6 +114,7 @@ the task spans them. Do not load what the task does not touch.
 | warnings, sanitizers, static analysis, tests, CI, what evidence a change needs | `references/build-and-tests.md` |
 | the task is to review someone's change rather than write one | `references/code-review.md` |
 | a maxim is being applied mechanically, or a "best practice" contradicts the measurement | `references/myths.md` |
+| linting new or edited code with clang-tidy, checking that cppman/clang-tidy exist and are new enough, installing them | `references/lint.md` and `references/tool-check.md` |
 
 Common combinations:
 
@@ -133,10 +134,18 @@ principles hold, the available mechanisms do not.
 1. State the standard detected and the references used.
 2. Answer, in the response, "is this the simplest code that achieves the goal?".
 3. Name the check that fails if the logic breaks, and run it on the smallest input.
-4. Confirm the build is warning-clean and no feature exceeds the detected standard.
-5. For a performance change, attach the evidence: profile, counters or assembly, minimum
+4. Lint every C++ file the agent wrote or edited (`references/lint.md`). Tool check first
+   (`references/tool-check.md`, minimum 22.1.0). The project needs
+   `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` and `-Wall`; then run
+   `clang-tidy -p build --checks='bugprone-use-after-move,clang-diagnostic-*,cppcoreguidelines-narrowing-conversions' <file>`
+   and fix each `warning:` and `error:` line. No compile database: say so and give the
+   cmake line from `references/lint.md`. `clangd --check` prints only an error count, not
+   diagnostics, and the clangd MCP server needs Go and a daemon and caught 2 of the 3 test
+   bugs; clang-tidy is the one command that works.
+5. Confirm the build is warning-clean and no feature exceeds the detected standard.
+6. For a performance change, attach the evidence: profile, counters or assembly, minimum
    over repetitions, against an unchanged control.
-6. Leave no comment the code already says, and no engineering notes in the source.
+7. Leave no comment the code already says, and no engineering notes in the source.
 
 ## Sources
 
