@@ -36,8 +36,9 @@ stays 0 for warnings, so grep the output for `warning:` and `error:` lines. Make
 code changes for each one and run the lint again until no `warning:` or `error:` line
 stays.
 
-The exit code stays 0 for warnings only. A nonzero exit code means the lint did not
-complete. Report its `error:` lines, for example a missing header or a `-Werror` flag.
+The exit code stays 0 for warnings only. A nonzero exit code means clang-tidy reported a
+problem it treats as an error (a compile error, or a warning promoted by
+`WarningsAsErrors`). Report the full diagnostics and do not call the lint clean.
 
 A use-after-move warning on an operation with no precondition (`clear()`, assignment,
 `size()` on a standard type) can be correct. Read the code before a change.

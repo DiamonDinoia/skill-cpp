@@ -41,6 +41,10 @@ When uv is missing:
 python3 -m pip install --user --upgrade <pkg>
 ```
 
+After the install, run `sh <skill dir>/references/tool-check-version.sh <tool> <min>`
+again. If it still fails, for example when `~/.local/bin` is not first on `PATH`, tell the
+user and do not run the lookup or the lint.
+
 The PyPI package names are `cppman` and `clang-tidy`. If pip refuses with an
 externally-managed-environment error (PEP 668), ask the user again before
 `--break-system-packages` is used. Never use sudo. Never run `curl | sh` outside the uv
