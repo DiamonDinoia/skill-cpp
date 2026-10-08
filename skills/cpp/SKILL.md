@@ -1,6 +1,6 @@
 ---
 name: cpp
-description: Write, review, refactor and modernize C++ against the C++ Core Guidelines. Detects the project's language standard (C++11/14/17/20/23) and loads the matching reference, so no proposed code uses a feature the project cannot compile, then loads the topic reference for the task. Use for any C++ authoring, code review, refactor, modernization pass, API design, performance and memory work, concurrency, numerics, security, debugging, portability, build speed, or "is this idiomatic C++?" question.
+description: Use on any C++ task: write, review, refactor, modernize against the C++ Core Guidelines at the project's detected language standard.
 license: MIT
 ---
 

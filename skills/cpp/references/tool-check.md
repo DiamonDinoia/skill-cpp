@@ -38,7 +38,7 @@ uv tool install <pkg>          # or: uv tool upgrade <pkg>
 When uv is missing:
 
 ```bash
-python3 -m pip install --user --upgrade <pkg>
+python3 -m pip install --user <pkg>==<version>
 ```
 
 After the install, run `sh <skill dir>/references/tool-check-version.sh <tool> <min>`
@@ -46,8 +46,8 @@ again. If it still fails, for example when `~/.local/bin` is not first on `PATH`
 user and do not run the lookup or the lint.
 
 The PyPI package names are `cppman` and `clang-tidy`. If pip refuses with an
-externally-managed-environment error (PEP 668), ask the user again before
-`--break-system-packages` is used. Never use sudo. Never run `curl | sh` outside the uv
-installer without asking the user first.
+externally-managed-environment error (PEP 668), stop: install only in a venv or with the
+distro package manager. Never escalate privileges. Never run a downloaded install script
+outside the uv installer without asking the user first.
 
 With a no, continue the task without the tool and say that the lookup or lint did not run.
