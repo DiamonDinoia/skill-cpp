@@ -63,6 +63,11 @@ The baseline of modern C++. Everything here is available; nothing from C++14 or 
 - `constexpr` on a member function implies `const` in C++11 only. Code written for C++11 and
   compiled as C++14 changes meaning.
 - A `constexpr` function body is a single `return` statement. No loop, no local variable.
+- GCC and Clang extension builtins (`__builtin_popcount`, `__builtin_popcountll`) are constant
+  expressions in a `constexpr` context, so a wrapper that forwards to them keeps `constexpr`
+  at every standard. Verify with a compiler probe ("does
+  `static_assert(__builtin_popcount(0xffu) == 8)` compile at the detected standard?"), never
+  from a general assumption about extensions.
 - `std::initializer_list` wins overload resolution against other constructors:
   `std::vector<int> v{3}` is one element, `std::vector<int> v(3)` is three.
 - A `std::unique_ptr` member deletes the class's copy operations. For pimpl, declare the

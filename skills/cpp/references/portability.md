@@ -51,6 +51,10 @@ adding a conditional compilation block, or when a defect appears on one target o
 - Never nest platform, compiler and version conditions. The combination is untestable.
 - Never define a macro that changes a class layout or an inline function's body differently
   between translation units. That is a one-definition-rule violation with silent consequences.
+- Never key library behaviour on a test-only macro from a public header. The macro has to be a
+  documented part of the interface, and it breaks other branches when they share one condition
+  or a using-declaration set. Exercise the fallback by calling it directly from the test, not
+  by suppressing the compiler or feature macro.
 - Name project macros with a project prefix, never a leading underscore, and never redefine a
   standard or implementation macro.
 

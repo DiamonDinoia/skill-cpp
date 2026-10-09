@@ -49,6 +49,7 @@ base rules; they still apply.
 | C++20 | `std::format` | a stream, or `fmt::format` from the fmt library |
 | C++20 | `<=>` | write the six comparison operators, or generate them from a `tie` |
 | C++20 | `<bit>` (`bit_cast`, `popcount`, `countl_zero`) | `memcpy` for type punning; compiler builtins behind one wrapper |
+| C++20 | `std::popcount` / `std::countl_zero` from `<bit>` | guard on `__cpp_lib_bitops >= 201907L` (never raw `__cplusplus`; MSVC lies without `/Zc:__cplusplus`), then `__builtin_popcount`/`__builtin_popcountll` under `__GNUC__ || __clang__`, then the portable SWAR body as `#else`. One implementation per branch, no duplicated logic. The builtin branch keeps `constexpr`: the builtins are constant expressions on GCC and Clang (see cpp11.md). Test once per path: `-std=c++17` (builtin), `-std=c++20` (std), and force the fallback by calling the fallback function directly from the test, never with a test-only macro in a public header. |
 | C++20 | `constinit`, `consteval` | `constexpr` plus a comment about the initialization order |
 | C++20 | `std::jthread` | `std::thread` plus a joining wrapper and a stop flag |
 | C++23 | `std::expected` | `std::variant<T, Error>`, or `std::optional` plus a separate error channel |

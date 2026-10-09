@@ -98,6 +98,13 @@ Each passes while the property it appears to test is broken.
   zero tests reports a green build for an empty run. Check the executed count.
 - A gate added to suppress a symptom becomes harmful once the cause is fixed. Re-test and
   remove it after the real fix lands.
+- A new test target nobody runs proves nothing and drags a boilerplate main with it. Before
+  adding one, check which targets each CI workflow builds and runs (an aggregate helper target,
+  or `./test` with no args); when any path skips the new target, fold the cases into a suite
+  every path already builds instead.
+- A check that compares a uniform value across identical lanes cannot see a bit moved between
+  lanes, because donor and receiver hold the same bits. Detect cross-lane leakage with patterns
+  that differ per lane; claim only what the input can distinguish.
 - A latent wrong-answer finding becomes a failing test, not a note. If the test passes, the
   finding was wrong.
 

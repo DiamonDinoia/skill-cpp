@@ -68,6 +68,12 @@ that appears only in one build configuration.
   set crossing a cache level.
 - Hang: a deadlock from inconsistent lock order, a condition variable without a predicate, or a
   spin waiting on a value that no longer changes.
+- Hang inside a test framework: suspect the framework's failure reporter before the code under
+  test. doctest blocks at 0% CPU (in `sigsuspend`) after the first failing CHECK inside a
+  template-instantiated `TEST_CASE_TEMPLATE` that still holds a live context scope passed eager
+  arguments. Confirm against the unmutated binary: when the same filters finish in under a
+  second, the reporter hangs on the failures, not the code. Judge the mutation verdict from the
+  first ERROR line, and run the filtered command under `timeout`; the exit code says nothing.
 - Leak the leak checker does not report: a growing container or cache, which is not a leak by
   the checker's definition. Measure the peak footprint instead.
 
