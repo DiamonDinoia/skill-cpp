@@ -115,7 +115,18 @@ Each passes while the property it appears to test is broken.
 - Reproducible builds: override `__DATE__`/`__TIME__` (`SOURCE_DATE_EPOCH`, `/Brepro`) and stamp out path-dependent `__FILE__` values.
 - Build and test in at least two configurations, debug with assertions and sanitizers, and
   optimized. A defect only at `-O2` is usually undefined behaviour.
-- Read build success from the build's own exit code, never from a piped command's.
+- Read build success from the build's own exit code, never from a piped command's. The exit
+  code of `... | tail -5` is tail's. Redirect the log to a file, or use `PIPESTATUS` in the
+  shell that ran the pipe (inside bash: `${PIPESTATUS[0]}`; a `bash -c` wrapper resets it).
+- Before declaring a test pass in a CMake project, run `ctest -N` and compare the count with
+  a known-good full-suite count. A preset without the project's test option
+  (`BUILD_TESTING`-style flags) silently builds no tests: `ctest` then reports 0 or a
+  handful of tests, exit 0, which looks like success. Unknown test-executable targets from
+  `ninja <target>` are the same symptom.
+- A build failure cut off by `tail` hides its own error. Re-run with `ninja -k 0`, capture
+  the full log, and read the first `error:` line. When unsure whether a failure is yours,
+  build the same configuration on the unchanged base: a matching failure is pre-existing,
+  and a kill or OOM under parallel load means retry at a lower `-j`.
 - Cache compilation with `ccache` or `sccache`, and disable the cache only when measuring
   compile time.
 - Long builds and sweeps run in the background with a progress check, never a blocking wait.

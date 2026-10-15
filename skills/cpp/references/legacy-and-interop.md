@@ -84,3 +84,19 @@ pass.
   `void*`. Code that compiles as both is subject to the stricter reading.
 - Link with the C++ driver when any translation unit is C++, so the runtime and the static
   initializers are linked in.
+
+## Testing a path that ends in abort()
+
+- Gate the test on exactly the features it uses, or it breaks the platforms the feature
+  matrix promises. A test that needs glibc malloc introspection, `/proc/self/*` or a POSIX
+  rlimit wants `__linux__ && __GLIBC__`, not `#if !defined(_WIN32)`.
+- Exclude the sanitizer runs with the same feature-test idiom the codebase already uses
+  (`__SANITIZE_ADDRESS__`, `__has_feature(address_sanitizer)`, and the thread-sanitizer
+  pair). A test that survives a child through `fork`+`abort` runs forever under a
+  leak-into-parent-reporting sanitizer unless the parent explicitly disables leak checking
+  in the child.
+- Expect the abort, not the diagnostic text: the child writes to a closed stream after
+  abort under some C libraries, and asserting on the text makes the test depend on the
+  library version.
+- Keep the abort test in the same target as the unit tests, behind the gate, so the
+  default suite still covers it on the platforms that gate in.
