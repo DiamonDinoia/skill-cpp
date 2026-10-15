@@ -51,6 +51,9 @@ Additional rules:
 - An ASCII diagram of a layout or a dataflow is worth many sentences and rarely goes stale.
 - Write in the third person about the code: "the kernel normalizes the input", not "we
   normalize" and not "I added".
+- A comment that narrates a draft the code no longer has (a measuring-routine design it replaced,
+  a backtracking claim the new code contradicts, a blame-the-wrong-name message) lies to every
+  reader. Edit it to say what is true now or delete it; `git log -S` recovers the story later.
 
 ## Formatting
 

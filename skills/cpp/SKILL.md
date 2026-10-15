@@ -1,72 +1,78 @@
 ---
 name: cpp
-description: Use on any C++ task: write, review, refactor, modernize against the C++ Core Guidelines at the project's detected language standard.
+description: Use on any C++ task: write, review, refactor, modernize against the C++ Core Guidelines at the detected standard.
 license: MIT
 ---
 
 # Writing C++ properly
 
-This file is the router: the rules for every C++ task, plus what to load. Two loads per
-task, the standard reference (§1) and the topic references the task triggers (§4).
+Router for every C++ task. Load the standard reference (section 1) and the topic references
+the task triggers (section 4). Sources: `references/sources.md`.
 
 ## 1. Detect the standard first
 
-Detect before writing or reviewing a line. Stop at the first source that answers.
+Detect before writing or reviewing a line. Stop at the first hit.
 
-1. `compile_commands.json`: grep `-std=`. This is what the compiler receives. Check several
-   entries, because a project can mix standards per target.
-2. CMake: `CMAKE_CXX_STANDARD`, `cxx_std_NN` in `target_compile_features`, `-std=` in
+1. `compile_commands.json`: grep `-std=`, the flags the compiler receives. Check several entries: a project can mix standards per target.
+2. CMake: `CMAKE_CXX_STANDARD`, `cxx_std_NN`, `-std=` in
    `CMAKE_CXX_FLAGS` or `target_compile_options`.
 3. Other build systems: `cpp_std=` in `meson.build`, `--cxxopt=-std=` in `.bazelrc` or
    `BUILD`, `-std=` in a `Makefile`, `/std:c++NN` in MSVC project files.
-4. CI configuration: the compiler versions there cap what the project can use.
-5. Source evidence: the newest feature already in use sets a floor, never a ceiling.
+4. CI configuration: its compiler versions cap what the project can use.
+5. Source evidence: the newest feature in use sets a floor, never a ceiling.
 
-Then load exactly one. Each lists what the standard adds, what it replaces, what is missing
-with the fallback idiom, and its traps.
+Load exactly one standard reference (`cpp11.md`, `cpp14.md`, `cpp17.md`, `cpp20.md`, or
+`cpp23.md` for C++23 and later). Each lists what the standard adds, what it replaces, what
+is missing, the fallback idiom and the traps.
 
-| Detected | Reference |
-|---|---|
-| C++11 | `references/cpp11.md` |
-| C++14 | `references/cpp14.md` |
-| C++17 | `references/cpp17.md` |
-| C++20 | `references/cpp20.md` |
-| C++23 or later | `references/cpp23.md` |
-
-- A public header must compile at the lowest standard any consumer uses.
-- Never raise the project standard as a side effect. Propose the bump separately, with the
-  compilers and CI that support it.
+- A public header compiles at the lowest standard any consumer uses.
+- Never raise the project standard as a side effect. Propose the bump separately, with supporting compilers and CI.
 - Language mode does not imply library support. Guard a lagging library feature with a
   feature-test macro from `<version>` (`__cpp_lib_*`, `__cpp_*`).
 - If detection is ambiguous, ask. Do not assume the newest standard.
 
 ## 2. Non-negotiables
 
-- Correctness first. A fast wrong answer is worthless. Every new branch, route or kernel
+- Correctness first. Every new branch, route or kernel
   ships with a check that fails when the logic breaks.
-- Simplest code that works: fewer lines, fewer types, fewer branches. One general solution
-  beats a family of special cases. Answer "is this the simplest thing that achieves the
-  goal?" before delivering, not after.
-- No feature above the detected standard, and no compiler extension without a stated reason.
+- Simplest code that works: fewer lines, types and branches. One general solution beats special cases. Answer "is this the simplest thing that achieves the goal?"
+  before delivering.
+- No feature above the detected standard, no compiler extension without a stated reason.
 - Warning-clean build. Fix the warning, never silence it. `[[maybe_unused]]` for a genuinely
   conditional entity, never a cast to `void`.
 - RAII for every resource. No `new`, no `delete`, no owning raw pointer, no manual cleanup.
-- Initialize every object at its declaration. Keep every scope minimal.
-- Const by default, `constexpr` where the value is computable at compile time.
-- Measure before claiming. A performance statement needs a profile, counters or the emitted
-  assembly. A correctness statement needs test output.
-- Match the project: its naming, formatting and error strategy. Consistency beats any
-  external style guide, and the lowest-churn fix comes first.
+- Initialize every object at its declaration. Keep scopes minimal.
+- Const by default, `constexpr` where computable at compile time.
+- Measure before claiming. Speed needs a profile, counters or the emitted
+  assembly. Correctness needs test output.
+- Match the project: naming, formatting, error strategy. Consistency beats any
+  style guide, and the lowest-churn fix comes first.
 
-## 2a. cppman: library fact lookup
+## 2a. Dead code: measure, then delete
 
-Before the skill gives a signature, preconditions or complexity for a standard library
-entity, it looks them up in cppman. Find the page name: `cppman -f <name>`. Get the page
-text: `cppman '<name>' | cat` (stdout pipe prints, no pager). The source is
-cppreference.com, set it with `cppman -s cppreference.com`. A name with no match prints
-`error: <name>: nothing appropriate.` and exits 0: try a member name alone. Pages cache in ~/.cache/cppman for offline use. Before the first use, do the tool check for cppman
-(`references/tool-check.md`, minimum 0.5.9). Missing or too old: ask the user before any
-install; with a no, continue without cppman and say the lookup did not run.
+- Delete a helper that became redundant, a guard that can never trigger, a clause that
+  restates the check above it. Delete the whole supply chain together: parameter, private
+  member, public setter, caller lines, init. Name every removed name in the report. A guard
+  whose threshold sits where the code cannot reach is false safety.
+- The removal check is the fixture that pins the value the deleted shape fed: the dump that
+  forced the new shape fails on the old.
+- The upstream default is not safety. A parameter, default or option with no live caller in
+  code or tests is an unreferenced definition, not coverage. Grep tests for one hit before
+  calling it covered. With an active PR, compare against the PR base and drop what the PR
+  added with no other caller.
+- A signature left over from the idiom it replaced is wrong for the new one, not stable. Fix
+  the signature when the design changes, not later.
+- Public-API deletions: check the export set (`git grep` the mangled or declared name).
+  Private ones need no check. Say which case each removed name was.
+
+## 2b. cppman: library fact lookup
+
+Before the skill quotes a library signature, preconditions or complexity, it looks them up
+in cppman. Find the page: `cppman -f <name>`. Print it:
+`cppman '<name>' | cat`. Set the source: `cppman -s cppreference.com`. No match prints
+`error: <name>: nothing appropriate.` and exits 0: try a member name alone. Pages cache in
+`~/.cache/cppman`. Run the tool check first (tool-check, minimum 0.5.9). Missing or too old: ask
+before installing. On a no, continue without cppman and say the lookup did not run.
 
 ## 3. Universal red flags, fix on sight
 
@@ -77,79 +83,59 @@ a header. A public data member protected by an invariant. A non-virtual destruct
 polymorphic base. A function longer than a screen. A `catch (...)` that swallows. An
 out-parameter where a return value fits. A copy where a reference or move fits. A
 hand-written specialization of an already-generic routine. A view stored beyond the lifetime
-of what it views. A file-local helper left with external linkage instead of an anonymous
+of what it views. A file-local helper with external linkage, not an anonymous
 namespace. An allocation inside a hot loop.
 
-## 4. Topic triggers, load what the task needs
+## 4. Topic triggers
 
-Read the reference when the task or the reviewed code touches its subject. Load several when
-the task spans them. Do not load what the task does not touch.
+Read the `references/<name>.md` the task touches. Load several when the task spans them.
+Do not load what the task does not touch.
 
 | Trigger | Reference |
 |---|---|
-| declaring variables, choosing a type, constants, enums, casts, conversions, `auto` | `references/types-and-initialization.md` |
-| function signatures, parameter passing, return values, overloads, ADL, operators, lambdas, value categories, API design | `references/functions-and-interfaces.md` |
-| allocation, smart pointers, handles, the five special members, views, container ownership, locks as scoped state | `references/resources-and-ownership.md` |
-| designing a type, inheritance, virtual functions, polymorphism, layout, comparison, hashing | `references/classes-and-hierarchies.md` |
-| error strategy, exceptions, exception safety, `optional`/`expected`, assertions, preconditions | `references/errors.md` |
-| any template, concept, trait, metaprogram, or growth in compile time or code size | `references/templates.md` |
-| choosing a container, writing a loop, strings, formatting, I/O, or reaching for a hand-rolled utility | `references/stdlib.md` |
-| threads, atomics, locks, parallel loops, shared data | `references/concurrency.md` |
-| speed, profiling, algorithmic complexity, data layout, or any performance claim | `references/performance.md` |
-| writing a vectorized kernel, an instruction-set dispatch, a batch loop, a tail, or code targeting a specific ISA | `references/simd.md` |
-| designing a timing run, an A/B, a baseline, a speedup number, a regression check | `references/benchmarking.md` |
-| the emitted assembly, whether a loop vectorized or a call inlined, spills, register pressure, a cost model, hardware counters | `references/asm-and-codegen.md` |
-| data layout, cache behaviour, allocation cost, custom allocators, `pmr`, alignment, memory footprint | `references/memory-and-allocators.md` |
-| discarded temporaries, intermediate containers, view pipelines, proxy objects, expression templates, generators, `co_await` | `references/lazy-evaluation-and-proxies.md` |
-| headers, includes, namespaces, ODR, pimpl, library boundaries, ABI, build structure | `references/source-files.md` |
-| slow build, slow rebuild, slow link, large binary, internal linkage, visibility, unity builds, `extern template` | `references/compile-speed.md` |
-| undefined behaviour, sanitizer reports, lifetime bugs, aliasing, iterator invalidation, integer or floating-point arithmetic, a bug that appears only at `-O2` | `references/pitfalls.md` |
-| floating-point accuracy, tolerances, stability, determinism, integer overflow, random numbers | `references/numerics.md` |
-| untrusted input, a trust boundary, credentials, hardening flags, a vulnerability class | `references/security.md` |
-| a crash, a wrong result, a flaky test, a leak, a hang, a defect in one configuration only | `references/debugging.md` |
-| more than one compiler or platform, conditional compilation, endianness, type widths, encodings | `references/portability.md` |
-| exceptions or RTTI disabled, no allocation, embedded or freestanding, hard real-time, device code | `references/constrained-environments.md` |
-| legacy code, C interop, `extern "C"`, a modernization pass | `references/legacy-and-interop.md` |
-| naming, comments, formatting, commit and diff hygiene | `references/style-and-comments.md` |
-| warnings, sanitizers, static analysis, tests, CI, what evidence a change needs | `references/build-and-tests.md` |
-| the task is to review someone's change rather than write one | `references/code-review.md` |
-| a maxim is being applied mechanically, or a "best practice" contradicts the measurement | `references/myths.md` |
-| linting new or edited code with clang-tidy, checking that cppman/clang-tidy exist and are new enough, installing them | `references/lint.md` and `references/tool-check.md` |
+| variables, types, constants, enums, casts, `auto` | types-and-initialization |
+| signatures, parameters, returns, overloads, ADL, operators, lambdas, API design | functions-and-interfaces |
+| allocation, smart pointers, handles, the five special members, views, ownership, scoped locks | resources-and-ownership |
+| type design, inheritance, virtual functions, layout, comparison, hashing | classes-and-hierarchies |
+| error strategy, exceptions, `optional`/`expected`, assertions, preconditions | errors |
+| templates, concepts, traits, metaprogramming, compile time | templates |
+| containers, loops, strings, formatting, I/O, hand-rolled utilities | stdlib |
+| threads, atomics, locks, parallel loops, shared data | concurrency |
+| speed, profiling, complexity, a performance claim | performance |
+| vectorized kernels, ISA dispatch, batch loops, tails | simd |
+| timing runs, A/B, baselines, speedups, regression checks | benchmarking |
+| assembly, vectorization, inlining, spills, register pressure, hardware counters | asm-and-codegen |
+| data layout, cache, allocation cost, allocators, `pmr`, alignment | memory-and-allocators |
+| temporaries, view pipelines, proxies, expression templates, generators, `co_await` | lazy-evaluation-and-proxies |
+| headers, includes, namespaces, ODR, pimpl, ABI, build structure | source-files |
+| slow build or link, large binary, visibility, unity builds, `extern template` | compile-speed |
+| undefined behaviour, sanitizers, lifetime, aliasing, iterator invalidation, `-O2`-only bugs | pitfalls |
+| floating point, tolerances, determinism, integer overflow, random numbers | numerics |
+| untrusted input, trust boundaries, credentials, hardening, vulnerabilities | security |
+| crashes, wrong results, flaky tests, leaks, hangs, single-configuration defects | debugging |
+| multiple compilers or platforms, conditional compilation, endianness, encodings | portability |
+| no exceptions or RTTI, no allocation, embedded, freestanding, real-time, device code | constrained-environments |
+| legacy code, C interop, `extern "C"`, modernization | legacy-and-interop |
+| naming, comments, formatting, commit and diff hygiene | style-and-comments |
+| warnings, sanitizers, static analysis, tests, CI, evidence | build-and-tests |
+| reviewing someone's change | code-review |
+| a maxim applied mechanically, best practice contradicting measurement | myths |
+| clang-tidy, tool version checks, tool installs | lint, tool-check |
 
-Common combinations:
+Combinations. Numeric work: numerics plus pitfalls. Optimization: performance plus
+memory-and-allocators, benchmarking before timing, asm-and-codegen before listings. External
+data: security plus errors. Reviews: code-review plus the subject references.
 
-- Numeric work: `numerics.md` plus `pitfalls.md`.
-- Optimization: `performance.md` plus `memory-and-allocators.md`, because the bottleneck is
-  usually memory. Add `benchmarking.md` before the timing run, `asm-and-codegen.md` before
-  reading a listing.
-- A parser or any consumer of external data: `security.md` plus `errors.md`.
-- A code review: `code-review.md` plus the references for the subject of the change.
-
-If the project disables exceptions or RTTI, forbids allocation, or targets a device or an
-embedded platform, load `constrained-environments.md` before proposing any idiom. The
-principles hold, the available mechanisms do not.
+If the project disables exceptions or RTTI, forbids allocation or targets a device, load
+constrained-environments before proposing any idiom. The principles hold, the mechanisms do not.
 
 ## 5. Before delivering
 
-1. State the standard detected and the references used.
-2. Answer, in the response, "is this the simplest code that achieves the goal?".
-3. Name the check that fails if the logic breaks, and run it on the smallest input.
-4. Lint every C++ file the agent wrote or edited (`references/lint.md`).
-5. Confirm the build is warning-clean and no feature exceeds the detected standard.
-6. For a performance change, attach the evidence: profile, counters or assembly, minimum
-   over repetitions, against an unchanged control.
-7. Leave no comment the code already says, and no engineering notes in the source.
-
-## Sources
-
-- [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) by
-  Stroustrup and Sutter: sections P, I, F, C, Enum, R, ES, Per, CP, E, Con, T, CPL, SF, SL,
-  the Type, Bounds and Lifetime safety profiles, the NR non-rules, the GSL idioms.
-- Herb Sutter, [Elements of Modern C++ Style](https://herbsutter.com/elements-of-modern-c-style/)
-  and the [GotW series](https://herbsutter.com/gotw/).
-- Jason Turner, [C++ Best Practices](https://github.com/cpp-best-practices/cppbestpractices).
-- Andrist and Sehr, [C++ High Performance, 2nd edition](https://www.oreilly.com/library/view/c-high-performance/9781839216541/):
-  measurement, data structures, memory management and allocators, compile-time programming,
-  proxy objects and lazy evaluation, concurrency, coroutines, parallel algorithms.
-- OpenSSF, [Compiler Options Hardening Guide for C and C++](https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html).
-- [cppreference](https://en.cppreference.com/) for exact semantics and feature-test macros.
+1. State the detected standard and the references used.
+2. Answer "is this the simplest code that achieves the goal?".
+3. Name the check that fails if the logic breaks. Run it on the smallest input.
+4. Lint every C++ file written or edited (lint).
+5. Confirm a warning-clean build and no feature above the detected standard.
+6. A performance change attaches evidence: profile, counters or assembly, minimum over
+   repetitions, against an unchanged control.
+7. Leave no comment the code already says, no engineering notes in the source.
